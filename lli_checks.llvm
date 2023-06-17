@@ -1,0 +1,11 @@
+define void @division_by_zero(i32) {
+  %is_zero = icmp eq i32 %0, 0
+  br i1 %is_zero, label %error_label, label %ok_label
+  ok_label:
+      ret void
+  error_label:
+      %ptr = getelementptr [23 x i8], [23 x i8]* @.zero_division, i32 0, i32 0
+      call void @print(i8* %ptr)
+      call void @exit(i32 0)
+      ret void
+}
