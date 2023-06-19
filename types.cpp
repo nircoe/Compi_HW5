@@ -53,10 +53,10 @@ string TypeToString(TypesEnum type) {
     return  "";
 }
 
-bool IsBoolExp(Exp_c &exp1, Exp_c &exp2) {
+bool IsBoolExp(ExpNode &exp1, ExpNode &exp2) {
     return exp1.isBoolExp() && exp2.isBoolExp();
 }
 
-bool IsTypeExp(Type_c &type, Exp_c &exp) {
+bool IsTypeExp(TypeNode &type, ExpNode &exp) {
     return AssignLegality(type.type, exp.type);
 }

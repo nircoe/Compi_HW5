@@ -5,6 +5,8 @@
     #include <stdlib.h>
     #include "types.hpp"
     #include "symbol_table.hpp"
+    #include "bp.hpp"
+    #include "code_generator.hpp"
 
     using namespace output;
     using std::vector;
@@ -15,6 +17,8 @@
     int yyerror(const char * message);
 
     TablesStack* tables_stack = &(TablesStack::getTablesStack());
+    CodeBuffer* code_buffer = &(CodeBuffer::instance());
+    CodeGenerator* code_generator;
 %}
 
 %token VOID INT BYTE B BOOL OVERRIDE TRUE FALSE RETURN IF WHILE BREAK CONTINUE COMMA LBRACE RBRACE ID NUM STRING
@@ -54,7 +58,7 @@ FuncDecl    :   OverRide RetType ID LPAREN Formals {
                         exit(1);
                     }
 
-                    $$ = new FuncDeclNode(returnType->type, formals->declarations, id->name);
+                    $$ = new FuncDeclNode(returnType->type, id->name, formals->declarations);
 
                 } RPAREN LBRACE Statements RBRACE {
                     tables_stack->curr_func_type = NULL_TYPE;
@@ -94,7 +98,7 @@ FormalDecl  :   Type ID {
                         errorDef(yylineno, id->name);
                         exit(1);
                     }
-                    $$ = new FormalDeclNode(type->type, id->name);
+                    $$ = new FormalDeclNode(type->type, id->name, code_generator->freshVar());
                 };
 Statements  :   Statement { }
             |   Statements Statement { }
@@ -317,6 +321,7 @@ Exp         :   LPAREN Exp RPAREN { $$ = new ExpNode(((ExpNode*)$2)->type); }
 int main()
 {
     tables_stack->Init();
+    code_generator = new CodeGenerator(code_buffer);
 	yyparse();
 }
 

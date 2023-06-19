@@ -203,8 +203,8 @@ bool AssignLegality(TypesEnum leftType, TypesEnum rightType);
 TypesEnum SumType(TypesEnum left, TypesEnum right);
 TypesEnum StringToType(const string& s);
 string TypeToString(TypesEnum type);
-bool IsBoolExp(Exp_c& exp1, Exp_c& exp2);
-bool IsTypeExp(Type_c& type, Exp_c& exp);
+bool IsBoolExp(ExpNode& exp1, ExpNode& exp2);
+bool IsTypeExp(TypeNode& type, ExpNode& exp);
 
 
 #endif //COMPI_TYPES_DECLARATION_H

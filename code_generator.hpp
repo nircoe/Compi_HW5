@@ -20,6 +20,7 @@ class CodeGenerator {
     public:
 
         CodeGenerator(CodeBuffer* _buffer) : buffer(_buffer), current_reg(0) {};
+        
         CodeBuffer* getCodeBuffer() { return buffer; }
         int getCurrentReg(bool increase = false) { return (increase) ? current_reg++ : current_reg; }
         void increaseCurrentReg() { current_reg++; }
@@ -29,7 +30,11 @@ class CodeGenerator {
         string freshVar();
         string globalFreshVar();
         ExpNode* arithmaticCalc(ExpNode& exp1, ExpNode& exp2, TypesEnum type, const string binop);
-        ExpNode* booleanCalc(ExpNode& exp1, ExpNode& exp2, const string relop);
+        ExpNode* booleanCalc(ExpNode& exp1, ExpNode& exp2, TypesEnum type, const string relop);
+        ExpNode* processNot(ExpNode& exp);
+        ExpNode* processAnd(ExpNode& exp1, ExpNode& exp2);
+        ExpNode* processOr(ExpNode& exp1, ExpNode& exp2);
+        ExpNode *processTrueOrFalse(const bool isTrue);
 };
 
 
