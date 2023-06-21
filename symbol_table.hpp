@@ -18,13 +18,14 @@ using std::string;
 class Symbol {
     public:
         const string symbol_name;
-        TypesEnum type;
         int offset;
-        bool isOverride;
+        TypesEnum type;
+        string var;
         bool function;
+        bool isOverride;
         vector<string> args;
-        Symbol(const string &symbol_name, int offset, TypesEnum type, bool function = false, bool isOverride = false) : 
-                symbol_name(symbol_name), offset(offset), type(type), function(function), isOverride(isOverride) {};
+        Symbol(const string &_symbol_name, int _offset, TypesEnum _type, string _var, bool _function = false, bool _isOverride = false) : 
+                symbol_name(_symbol_name), offset(_offset), type(_type), var(_var), function(_function), isOverride(_isOverride) {};
         ~Symbol() = default;
 };
 
@@ -50,6 +51,7 @@ public:
     stack<SymbolTable*> table_stack;
     stack<int> offset_stack;
     TypesEnum curr_func_type = NULL_TYPE;
+
     static TablesStack& getTablesStack() {
         static TablesStack instance;
         return instance;
@@ -59,11 +61,15 @@ public:
     // checks if symbol was declared
     bool symbDeclared(const string& name, bool is_func = false);
     // declares new variable
-    void declVar(const string& name, TypesEnum type);
+    void declVar(const string& name, TypesEnum type, string var);
     // declares new function
     int declFunc(const string& name, TypesEnum type, FormalsNode* formals, bool isOverride, int yylineno);
     // gets the id type by its name
     TypesEnum getIDType(const string& name);
+    // gets the id offset by its name
+    int getIDOffset(const string &id_name);
+    // gets the id offset by its name
+    int getIdOffset(const string& name);
     // gets the func-id type by its name and function parameters
     TypesEnum getFuncType(const std::string &name, vector<ExpNode*>& exprs);
     // checks if the parameters entered to function are valid

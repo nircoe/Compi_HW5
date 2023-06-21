@@ -17,12 +17,12 @@ void TablesStack::Init() {
 
     //for none integer print
     SymbolTable* curr_table = this->table_stack.top();
-    Symbol* print_func = new Symbol("print", NA, TYPE_VOID, true);
+    Symbol* print_func = new Symbol("print", NA, TYPE_VOID, "", true);
     print_func->args = {"STRING"};
     curr_table->symbols.push_back(print_func);
 
     //for integers print
-    Symbol* printi_func = new Symbol("printi", NA, TYPE_VOID, true);
+    Symbol* printi_func = new Symbol("printi", NA, TYPE_VOID, "", true);
     printi_func->args = {"INT"};
     curr_table->symbols.push_back(printi_func);
 }
@@ -40,10 +40,10 @@ bool TablesStack::symbDeclared(const string& name, bool is_func) {
 }
 
 
-void TablesStack::declVar(const string& var_name, TypesEnum var_type) {
-    Symbol* new_var = new Symbol(var_name, this->offset_stack.top(), var_type);
+void TablesStack::declVar(const string& var_name, TypesEnum var_type, string var) {
+    Symbol* new_symbol = new Symbol(var_name, this->offset_stack.top(), var_type, var);
     SymbolTable* curr_table = this->table_stack.top();
-    curr_table->symbols.push_back(new_var);
+    curr_table->symbols.push_back(new_symbol);
     int top = this->offset_stack.top() + 1;
     this->offset_stack.pop();
     this->offset_stack.push(top);
@@ -51,7 +51,7 @@ void TablesStack::declVar(const string& var_name, TypesEnum var_type) {
 
 
 int TablesStack::declFunc(const string& name, TypesEnum type, FormalsNode* formals, bool isOverride, int yylineno) {
-    Symbol* new_func = new Symbol(name, NA, type, true, isOverride);
+    Symbol* new_func = new Symbol(name, NA, type, "", true, isOverride);
 
     if (isOverride) {
         if (name.compare("main") == 0) {
@@ -105,7 +105,7 @@ int TablesStack::declFunc(const string& name, TypesEnum type, FormalsNode* forma
     curr_table = this->table_stack.top();
     int offset = -1;
     for (int i = 0; i < formals->declarations.size(); ++i) {
-        Symbol* curr_param = new Symbol(formals->declarations[i]->name, offset--, formals->declarations[i]->type);
+        Symbol* curr_param = new Symbol(formals->declarations[i]->name, offset--, formals->declarations[i]->type, formals->declarations[i]->var);
         if(this->symbDeclared(formals->declarations[i]->name)){
             errorDef(yylineno,formals->declarations[i]->name);
             return -1;
@@ -128,7 +128,9 @@ TypesEnum TablesStack::getIDType(const string &id_name) {
     return NULL_TYPE;
 }
 
-
+int TablesStack::getIdOffset(const string &name) {
+    return 0;
+}
 
 TypesEnum TablesStack::getFuncType(const string &func_name, vector<ExpNode*>& exprs) {
     SymbolTable* table_iter = this->table_stack.top();
@@ -256,4 +258,16 @@ void TablesStack::closeScope() {
     }
     this->offset_stack.pop();
     this->table_stack.pop();
+}
+
+int TableStacks::getIDOffset(const string &id_name){
+    SymbolTable* table_iter = this->table_stack.top();
+    while (table_iter) {
+        for (int i = 0; i < table_iter->symbols.size(); i++) {
+            if (table_iter->symbols[i]->symbol_name == id_name)
+                return table_iter->symbols[i]->offset;
+        }
+        table_iter = table_iter->parent;
+    }
+    return 0;
 }

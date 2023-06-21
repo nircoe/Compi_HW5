@@ -187,6 +187,7 @@ public:
 };
 
 class StatementsNode : public Node {
+public:
     List next_list;
     List break_list;
     List continue_list;
@@ -195,6 +196,13 @@ class StatementsNode : public Node {
 
     StatementsNode(const vector<StatementNode*>& _statements, string _start_label = "") : 
                     statements(_statements), start_label(_start_label) {};
+};
+
+class MarkerNode : public Node {
+public:
+    string label;
+    List next_list;
+    MarkerNode(List _next_list) : next_list(_next_list) {};
 };
 
 
