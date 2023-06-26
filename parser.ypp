@@ -345,7 +345,7 @@ Exp         :   LPAREN Exp RPAREN { $$ = new ExpNode(((ExpNode*)$2)->type); }
             ;
 
 N           :   { 
-                    List next_list = code_generator->buffer->makelist(pair<int, BranchLabelIndex>(code_generator->buffer->emit("br label @), FIRST));
+                    List next_list = code_generator->buffer->makelist(pair<int, BranchLabelIndex>(code_generator->buffer->emit("br label @"), FIRST));
                     $$ = new MarkerNode(next_list);
                 };
 

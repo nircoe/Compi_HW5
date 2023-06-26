@@ -162,7 +162,7 @@ TypesEnum TablesStack::getFuncType(const string &func_name, vector<ExpNode*>& ex
         }
         table_iter = table_iter->parent;
     }
-    return this->getIDType(func_name);
+    return this->getIdType(func_name);
 }
 
 
@@ -286,16 +286,4 @@ void TablesStack::closeScope() {
     }
     this->offset_stack.pop();
     this->table_stack.pop();
-}
-
-int TableStacks::getIDOffset(const string &id_name){
-    SymbolTable* table_iter = this->table_stack.top();
-    while (table_iter) {
-        for (int i = 0; i < table_iter->symbols.size(); i++) {
-            if (table_iter->symbols[i]->symbol_name == id_name)
-                return table_iter->symbols[i]->offset;
-        }
-        table_iter = table_iter->parent;
-    }
-    return 0;
 }
