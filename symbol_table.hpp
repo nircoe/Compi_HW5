@@ -24,6 +24,7 @@ class Symbol {
         bool function;
         bool isOverride;
         vector<string> args;
+        int counter;
         Symbol(const string &_symbol_name, int _offset, TypesEnum _type, string _var, bool _function = false, bool _isOverride = false) : 
                 symbol_name(_symbol_name), offset(_offset), type(_type), var(_var), function(_function), isOverride(_isOverride) {};
         ~Symbol() = default;
@@ -63,19 +64,19 @@ public:
     // declares new variable
     void declVar(const string& name, TypesEnum type, string var);
     // declares new function
-    int declFunc(const string& name, TypesEnum type, FormalsNode* formals, bool isOverride, int yylineno);
+    int declFunc(const string& name, TypesEnum type, FormalsNode* formals, bool isOverride, int yylineno, int* counter);
     // gets the id type by its name
-    TypesEnum getIDType(const string& name);
+    TypesEnum getIdType(const string& id_name);
     // gets the id offset by its name
-    int getIDOffset(const string &id_name);
-    // gets the id offset by its name
-    int getIdOffset(const string& name);
+    int getIdOffset(const string& id_name);
     // gets the func-id type by its name and function parameters
-    TypesEnum getFuncType(const std::string &name, vector<ExpNode*>& exprs);
+    TypesEnum getFuncType(const string &name, vector<ExpNode*>& exprs);
     // checks if the parameters entered to function are valid
-    int checkFuncParams(const std::string& func_name, vector<ExpNode*> exprs, int yylineno);
+    int checkFuncParams(const string& func_name, vector<ExpNode*> exprs, int yylineno);
     // checks if the parameters entered to function are valid
-    int checkFuncParams(const std::string& name, int yylineno);
+    int checkFuncParams(const string& name, int yylineno);
+    // gets the counter of the function by its name
+    int getFuncCounter(const string& func_name, vector<ExpNode*> exprs = {});
     // checks if a befitting main function exists
     bool mainExists();
     // check if ID exists in current scope by name

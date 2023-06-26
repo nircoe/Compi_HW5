@@ -50,7 +50,7 @@ void TablesStack::declVar(const string& var_name, TypesEnum var_type, string var
 }
 
 
-int TablesStack::declFunc(const string& name, TypesEnum type, FormalsNode* formals, bool isOverride, int yylineno) {
+int TablesStack::declFunc(const string& name, TypesEnum type, FormalsNode* formals, bool isOverride, int yylineno, int* counter) {
     Symbol* new_func = new Symbol(name, NA, type, "", true, isOverride);
 
     if (isOverride) {
@@ -63,7 +63,7 @@ int TablesStack::declFunc(const string& name, TypesEnum type, FormalsNode* forma
 
     SymbolTable* table_iter = this->table_stack.top();
     while (table_iter != nullptr) {
-        for (int i=0; i < table_iter->symbols.size(); ++i){
+        for (int i=0; i < table_iter->symbols.size(); ++i) {
             if (table_iter->symbols[i]->symbol_name == name && table_iter->symbols[i]->function) {
                 if(!(table_iter->symbols[i]->isOverride) && !isOverride) {
                     errorDef(yylineno, name);
@@ -81,7 +81,11 @@ int TablesStack::declFunc(const string& name, TypesEnum type, FormalsNode* forma
                     if(table_iter->symbols[i]->args.size() != formals->declarations.size()) continue;
                     int diff = 0;
                     for(int j = 0; j < formals->declarations.size(); j++) {
-                        if(StringToType(table_iter->symbols[i]->args[j]) != formals->declarations[j]->type) diff++;
+                        if(StringToType(table_iter->symbols[i]->args[j]) != formals->declarations[j]->type) {
+                            diff++;
+                            *counter = std::max(*counter, table_iter->symbols[i]->counter);
+                            break;
+                        }
                     }
                     if(diff == 0) {
                         errorDef(yylineno, name);
@@ -92,7 +96,8 @@ int TablesStack::declFunc(const string& name, TypesEnum type, FormalsNode* forma
         }
         table_iter = table_iter->parent;
     }
-
+    *counter = *counter + 1;
+    new_func->counter = *counter;
     SymbolTable* curr_table = this->table_stack.top();
     this->curr_func_type = type;
     vector<string> func_params = vector<string>();
@@ -116,7 +121,7 @@ int TablesStack::declFunc(const string& name, TypesEnum type, FormalsNode* forma
 }
 
 
-TypesEnum TablesStack::getIDType(const string &id_name) {
+TypesEnum TablesStack::getIdType(const string &id_name) {
     SymbolTable* table_iter = this->table_stack.top();
     while (table_iter) {
         for (int i = 0; i < table_iter->symbols.size(); i++) {
@@ -128,8 +133,16 @@ TypesEnum TablesStack::getIDType(const string &id_name) {
     return NULL_TYPE;
 }
 
-int TablesStack::getIdOffset(const string &name) {
-    return 0;
+int TablesStack::getIdOffset(const string &id_name) {
+    SymbolTable* table_iter = this->table_stack.top();
+    while (table_iter) {
+        for (int i = 0; i < table_iter->symbols.size(); i++) {
+            if (table_iter->symbols[i]->symbol_name == id_name)
+                return table_iter->symbols[i]->offset;
+        }
+        table_iter = table_iter->parent;
+    }
+    return INT_MIN; // not exist
 }
 
 TypesEnum TablesStack::getFuncType(const string &func_name, vector<ExpNode*>& exprs) {
@@ -190,7 +203,22 @@ int TablesStack::checkFuncParams(const string& func_name, int yylineno) {
     return this->checkFuncParams(func_name, {}, yylineno);
 }
 
+int TablesStack::getFuncCounter(const string &func_name, vector<ExpNode*> exprs)
+{
+    SymbolTable* table_iter = this->table_stack.top();
+    int cnt_funcs = 0;
+    while (table_iter) {
+        for (int i = 0; i < table_iter->symbols.size(); ++i) {
+            if (table_iter->symbols[i]->symbol_name.compare(func_name) == 0) {
+                if (checkFunctionParams(table_iter->symbols[i], func_name, exprs))
+                    return table_iter->symbols[i]->counter;
+            }
+        }
+        table_iter = table_iter->parent;
+    }
 
+    return -1; // not supposed to happen
+}
 
 bool TablesStack::mainExists() {
     SymbolTable* table_iter = this->table_stack.top();

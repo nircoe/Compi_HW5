@@ -42,7 +42,7 @@ class CodeGenerator {
         void loadVar(ExpNode& exp, int offset);
         string processNumAssign(ExpNode& exp, string var, string value);
         ExpNode* makeBool(ExpNode &exp);
-        void startFunc(FuncDeclNode* func);
+        void startFunc(FuncDeclNode* func, int func_counter);
         void endFunc(RetTypeNode* type, StatementsNode* s, MarkerNode* marker);
         void processFirstStatement(StatementsNode* statements, StatementNode* statement);
         void processStatements(StatementsNode* statements, StatementNode* new_statement);

@@ -55,14 +55,14 @@ FuncDecl    :   OverRide RetType ID LPAREN Formals {
                     IdNode* id = (IdNode*)$3;
                     id->type = returnType->type;
                     FormalsNode* formals = (FormalsNode*)$5;
-
-                    int res = tables_stack->declFunc(id->name, returnType->type, formals, override->isOverride, yylineno);
+                    int counter = 0;
+                    int res = tables_stack->declFunc(id->name, returnType->type, formals, override->isOverride, yylineno, &counter);
                     if(res == -1) {
                         exit(1);
                     }
 
-                    $$ = new FuncDeclNode(returnType->type, id->name, formals->declarations);
-                    code_generator->startFunc((FuncDeclNode*)$$);
+                    $$ = new FuncDeclNode(returnType->type, id->name, formals->declarations); // add counter ?
+                    code_generator->startFunc((FuncDeclNode*)$$, counter);
                 } RPAREN LBRACE N Statements RBRACE {
                     tables_stack->curr_func_type = NULL_TYPE;
                     code_generator->endFunc((RetTypeNode*)$2, (StatementsNode*)$10, (MarkerNode*)$9); // check if statements is $10 or $9
@@ -196,7 +196,7 @@ Statement   :   LBRACE OpenScope Statements RBRACE CloseScope {
                     StatementNode* statement = (StatementNode*)$6;
                     $$ = new StatementNode();
                     code_generator->processIf(*(StatementNode*)$$, *exp, *statement); //////////
-                }
+                } 
             |   IF LPAREN IsExpBool RPAREN OpenScope Statement CloseScope ELSE OpenScope Statement CloseScope { }
             |   WHILE LPAREN IsExpBool RPAREN WhileScope Statement CloseScope { }
             |   BREAK SC { 
@@ -223,7 +223,8 @@ Call        :   ID LPAREN ExpList RPAREN {
                     if(res == -1) {
                         exit(1);
                     }
-                    $$ = new CallNode(tables_stack->getFuncType(id->name, expr_list->exprs), id->name);
+                    int counter = tables_stack->getFuncCounter(id->name, expr_list->exprs);
+                    $$ = new CallNode(tables_stack->getFuncType(id->name, expr_list->exprs), id->name); // need to add counter;
                 }
             |   ID LPAREN RPAREN { 
                     IdNode* id = (IdNode*)$1;
@@ -233,7 +234,8 @@ Call        :   ID LPAREN ExpList RPAREN {
                     }
                     tables_stack->checkFuncParams(id->name, yylineno);
                     vector<ExpNode*> exprs;
-                    $$ = new CallNode(tables_stack->getFuncType(id->name, exprs), id->name);
+                    int counter = tables_stack->getFuncCounter(id->name);
+                    $$ = new CallNode(tables_stack->getFuncType(id->name, exprs), id->name); // need to add counter;
                 }
             ;
 ExpList     :   Exp { 

@@ -139,19 +139,19 @@ void CodeGenerator::storeVar(ExpNode &exp, StatementNode &sn, int offset) {
 
 
 void CodeGenerator::initVar(IdNode& id, StatementNode &sn, TypesEnum type, int offset) {
-    string var = this->freshVar(), ptr = this->freshVar();
+    id.var = this->freshVar();
+    string ptr = this->freshVar();
     sn.start_label = this->buffer->genLabel();
     if(type == TYPE_BYTE || type == TYPE_INT)
-        this->buffer->emit(var + " = add i32 0, 0"); // init 0 
+        this->buffer->emit(id.var + " = add i32 0, 0"); // init 0 
     else if(type == TYPE_BOOL) {
         string temp = this->freshVar();
         this->buffer->emit(temp + " = icmp eq i32 0, 1"); // init false, i1
-        this->buffer->emit(var + " = zext i1 " + temp + " to i32"); // extend to i32
+        this->buffer->emit(id.var + " = zext i1 " + temp + " to i32"); // extend to i32
     }
     this->buffer->emit(ptr + " = getelementptr [50 x i32], [50 x i32]*" + this->func_vars_arr + ", i32 0, i32 " + std::to_string(offset));
-    this->buffer->emit("store i32 " + var + ", i32* " + ptr);
+    this->buffer->emit("store i32 " + id.var + ", i32* " + ptr);
     sn.next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
-    id.var = var;
 }
 
 void CodeGenerator::loadVar(ExpNode &exp, int offset) {
@@ -211,7 +211,7 @@ ExpNode* CodeGenerator::makeBool(ExpNode &exp){
     return new_exp;
 }
 
-void CodeGenerator::startFunc(FuncDeclNode* func) {
+void CodeGenerator::startFunc(FuncDeclNode* func, int func_counter) {
     string args = "";
     int size = func->declarations.size();
     for(int i = 0; i < size; i++) {
@@ -219,7 +219,7 @@ void CodeGenerator::startFunc(FuncDeclNode* func) {
         if(i != size - 1) args += ", ";
     }
     string _type = (func->type == TYPE_VOID) ? "void" : "i32";
-    this->buffer->emit("define "+ _type + " @" + func->name + "(" + args + ") {");
+    this->buffer->emit("define "+ _type + " @" + func->name + func_counter + "(" + args + ") {");
     this->allocaVarsForFunc();
 }
 
