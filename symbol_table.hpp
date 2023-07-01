@@ -8,6 +8,7 @@
 #include <vector>
 #include <stack>
 #include <string>
+#include <climits>
 #define NA 0
 
 extern int yylineno;

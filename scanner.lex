@@ -37,8 +37,7 @@ lbrace (\{)
 rbrace (\})
 assign (\=)
 relop (==|!=|<|>|<=|>=)
-plusminus ([\+\-])
-multdiv ([\*\/])
+binop ([\+\-\*\/])
 comment (\/\/[^\n\r]*)
 id ([a-zA-z][a-zA-Z0-9]*)
 num (([1-9]+[0-9]*)|0)
@@ -78,14 +77,13 @@ string (\"({printable_char}|{escape_sequence}|{legal_hex})*\")
 {lbrace}                    return LBRACE;
 {rbrace}                    return RBRACE;
 {assign}                    return ASSIGN;
-{relop}                     return RELOP;
-{plusminus}                 return PLUSMINUS;
-{multdiv}                   return MULTDIV;
+{relop}                     { RelopNode* relop = new RelopNode(yytext); yylval = (RelopNode*)relop; return RELOP; }
+{binop}                     { BinopNode* binop = new BinopNode(yytext); yylval = (BinopNode*)binop; return BINOP; }
 {comment}                   ;
 {id}                        { IdNode* id = new IdNode(yytext); yylval = (IdNode*)id; return ID; }
 {num}                       { NumNode* num = new NumNode(yytext); yylval = (NumNode*)num; return NUM; }
 {whitespace}				;
-{string}                    return STRING;
+{string}                    { StringNode* str = new StringNode(yytext); yylval = (StringNode*)str; return STRING; }
 
 .		                    { errorLex(yylineno); exit(0); };
 

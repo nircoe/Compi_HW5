@@ -8,7 +8,7 @@ string CodeGenerator::globalFreshVar() {
     return "@.var" + this->getCurrentReg(true);
 }
 
-string binopToLLVM(const char binop, CodeBuffer* buffer, TypesEnum type, ExpNode &exp2) {
+string binopToLLVM(const char binop, CodeBuffer* buffer, TypesEnum type, ExpNode *exp2) {
     switch(binop) {
         case '+':
             return "add";
@@ -17,32 +17,11 @@ string binopToLLVM(const char binop, CodeBuffer* buffer, TypesEnum type, ExpNode
         case '*':
             return "mul";
         case '/':
-            buffer->emit("call void @division_by_zero(i32 " + exp2.var + ")"); // need to add this function to llvm file
+            buffer->emit("call void @division_by_zero(i32 " + exp2->var + ")"); // need to add this function to llvm file
             if(type == TYPE_BYTE) return "udiv";
             else if(type == TYPE_INT) return "sdiv";
     }
     return ""; // error
-}
-
-ExpNode* CodeGenerator::arithmaticCalc(ExpNode &exp1, ExpNode &exp2, TypesEnum type, const string binop) {
-    string binop_llvm = binopToLLVM(binop[0], this->buffer, type, exp2);
-    ExpNode* new_exp = new ExpNode(type, this->freshVar());
-    new_exp->start_label = exp1.start_label;
-    this->buffer->bpatch(exp1.next_list, exp2.start_label);
-    this->buffer->bpatch(exp2.next_list, this->buffer->genLabel());
-
-    this->buffer->emit(new_exp->var + " = " + binop_llvm + "i32 " + exp1.var + ", " + exp2.var);
-
-    if (new_exp->type == TYPE_BYTE) {
-        string temp = this->freshVar();
-        this->buffer->emit(temp + " = and i32 " + new_exp->var + ", 255");
-        new_exp->var = temp;
-    }
-
-    new_exp->next_list = this->buffer->makelist(
-                            pair<int, BranchLabelIndex>(
-                                this->buffer->emit("br label @"), FIRST));
-    return new_exp;
 }
 
 string relopToLLVM(const string relop) {
@@ -55,122 +34,57 @@ string relopToLLVM(const string relop) {
     return ""; // error
 }
 
-
-ExpNode* CodeGenerator::booleanCalc(ExpNode &exp1, ExpNode &exp2, TypesEnum type, const string relop) {
-    string relop_op = relopToLLVM(relop);
-
-    if(!(relop.compare("==") == 0 || relop.compare("!=") == 0)) {
-        if(exp1.type == TYPE_BYTE && exp2.type == TYPE_BYTE) relop_op = "u" + relop_op;
-        else                                                 relop_op = "s" + relop_op;
-    }
-
-    string next_start_label = this->buffer->genLabel();
-    ExpNode* new_exp = new ExpNode(type, this->freshVar());
-    this->buffer->emit(new_exp->var + " = icmp " + relop_op + " i32 " + exp1.var + ", " + exp2.var);
-    int next = this->buffer->emit("br i1 " + new_exp->var + ", label @, label @");
-    new_exp->true_list = this->buffer->makelist(pair<int, BranchLabelIndex>(next, FIRST));
-    new_exp->false_list = this->buffer->makelist(pair<int, BranchLabelIndex>(next, SECOND));
-    new_exp->start_label = exp1.start_label;
-    this->buffer->bpatch(exp1.next_list, exp2.start_label);
-    this->buffer->bpatch(exp2.next_list, next_start_label);
-    return new_exp;
-}
-
-ExpNode *CodeGenerator::processNot(ExpNode &exp)
-{
-    ExpNode* new_exp = new ExpNode(TYPE_BOOL);
-    new_exp->true_list = exp.false_list;
-    new_exp->false_list = exp.true_list;
-    new_exp->start_label = exp.start_label;
-    return new_exp;
-}
-
-ExpNode *CodeGenerator::processAnd(ExpNode &exp1, ExpNode &exp2)
-{
-    ExpNode* new_exp = new ExpNode(TYPE_BOOL);
-    new_exp->start_label = exp1.start_label;
-    this->buffer->bpatch(exp1.true_list, exp2.start_label);
-    new_exp->true_list = exp2.true_list;
-    new_exp->false_list = this->buffer->merge(exp1.false_list, exp2.false_list);
-    return new_exp;
-}
-
-ExpNode *CodeGenerator::processOr(ExpNode &exp1, ExpNode &exp2)
-{
-    ExpNode* new_exp = new ExpNode(TYPE_BOOL);
-    new_exp->start_label = exp1.start_label;
-    this->buffer->bpatch(exp1.false_list, exp2.start_label);
-    new_exp->true_list = this->buffer->merge(exp1.true_list, exp2.true_list);
-    new_exp->false_list = exp2.false_list;
-    return new_exp;
-}
-
-ExpNode *CodeGenerator::processTrueOrFalse(const bool isTrue) {
-    ExpNode* new_exp = new ExpNode(TYPE_BOOL);
-    new_exp->start_label = this->buffer->genLabel();
-    int next =this->buffer->emit("br label @");
-    List new_list = this->buffer->makelist(pair<int, BranchLabelIndex>(next, FIRST));
-    if(isTrue) new_exp->true_list = new_list;
-    else  new_exp->false_list = new_list;
-    new_exp->value = isTrue ? "true" : "false";
-    return new_exp;
-}
-
 void CodeGenerator::allocaVarsForFunc() {
     this->func_vars_arr = this->freshVar();
     this->buffer->emit(this->func_vars_arr + " = alloca [50 x i32]");
 }
 
-void CodeGenerator::storeVar(ExpNode &exp, StatementNode &sn, int offset) {
-    List next_list = exp.next_list;
-    if (exp.type == TYPE_BOOL){
-        ExpNode* new_exp = makeBool(exp);
-        exp.var = new_exp->var;
-        next_list = new_exp->next_list;
-    }
+void CodeGenerator::storeVar(ExpNode *exp, StatementNode *sn, int offset) {
+    List next_list = exp->next_list;
+    if(exp->type == TYPE_BOOL) processBoolExp(exp);
     string new_label = this->buffer->genLabel();
     this->buffer->bpatch(next_list, new_label);
-    sn.start_label = exp.start_label;
+    sn->start_label = exp->start_label;
     string var_ptr = this->freshVar();
-    this->buffer->emit(var_ptr + " = getelementptr [50 x i32], [50 x i32]*" + this->func_vars_arr + ", i32 0, i32 " + std::to_string(offset));
-    this->buffer->emit("store i32" + exp.var + ", i32*" + var_ptr);
-    sn.next_list = this->buffer->makelist(pair<int,BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
+    this->buffer->emit(var_ptr + " = getelementptr [50 x i32], [50 x i32]*" + this->func_vars_arr + ", i32 0, i32 " + to_string(offset));
+    this->buffer->emit("store i32" + exp->var + ", i32*" + var_ptr);
+    sn->next_list = this->buffer->makelist(pair<int,BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
 }
 
 
-void CodeGenerator::initVar(IdNode& id, StatementNode &sn, TypesEnum type, int offset) {
-    id.var = this->freshVar();
+void CodeGenerator::initVar(IdNode* id, StatementNode *sn, TypesEnum type, int offset) {
+    id->var = this->freshVar();
     string ptr = this->freshVar();
-    sn.start_label = this->buffer->genLabel();
+    sn->start_label = this->buffer->genLabel();
     if(type == TYPE_BYTE || type == TYPE_INT)
-        this->buffer->emit(id.var + " = add i32 0, 0"); // init 0 
+        this->buffer->emit(id->var + " = add i32 0, 0"); // init 0 
     else if(type == TYPE_BOOL) {
         string temp = this->freshVar();
         this->buffer->emit(temp + " = icmp eq i32 0, 1"); // init false, i1
-        this->buffer->emit(id.var + " = zext i1 " + temp + " to i32"); // extend to i32
+        this->buffer->emit(id->var + " = zext i1 " + temp + " to i32"); // extend to i32
     }
-    this->buffer->emit(ptr + " = getelementptr [50 x i32], [50 x i32]*" + this->func_vars_arr + ", i32 0, i32 " + std::to_string(offset));
-    this->buffer->emit("store i32 " + id.var + ", i32* " + ptr);
-    sn.next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
+    this->buffer->emit(ptr + " = getelementptr [50 x i32], [50 x i32]*" + this->func_vars_arr + ", i32 0, i32 " + to_string(offset));
+    this->buffer->emit("store i32 " + id->var + ", i32* " + ptr);
+    sn->next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
 }
 
-void CodeGenerator::loadVar(ExpNode &exp, int offset) {
-    exp.start_label = this->buffer->genLabel();
+void CodeGenerator::loadVar(ExpNode *exp, int offset) {
+    exp->start_label = this->buffer->genLabel();
     if(offset >= 0) {
-        exp.var = this->freshVar();
+        exp->var = this->freshVar();
         string ptr = this->freshVar();
-        this->buffer->emit(ptr + " = getelementptr [50 x i32], [50 x i32]*" + this->func_vars_arr + ", i32 0, i32 " + std::to_string(offset));
-        this->buffer->emit(exp.var + " = load i32, i32* " + ptr);
+        this->buffer->emit(ptr + " = getelementptr [50 x i32], [50 x i32]*" + this->func_vars_arr + ", i32 0, i32 " + to_string(offset));
+        this->buffer->emit(exp->var + " = load i32, i32* " + ptr);
     }
-    else exp.var = "%" + std::to_string(offset);
-    if(exp.type == TYPE_BOOL) {
+    else exp->var = "%" + to_string(offset);
+    if(exp->type == TYPE_BOOL) {
         string is_true = this->freshVar();
-        this->buffer->emit(is_true + " = icmp ne i32 " + exp.var + ", 0");
+        this->buffer->emit(is_true + " = icmp ne i32 " + exp->var + ", 0");
         int next = this->buffer->emit("br i1 " + is_true + ", label @, label @");
-        exp.true_list = this->buffer->makelist(pair<int, BranchLabelIndex>(next, FIRST));
-        exp.false_list = this->buffer->makelist(pair<int, BranchLabelIndex>(next, SECOND));
+        exp->true_list = this->buffer->makelist(pair<int, BranchLabelIndex>(next, FIRST));
+        exp->false_list = this->buffer->makelist(pair<int, BranchLabelIndex>(next, SECOND));
     }
-    else exp.next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
+    else exp->next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
 }
 
 string CodeGenerator::processNumAssign(ExpNode &exp, string var, string value) {
@@ -181,36 +95,6 @@ string CodeGenerator::processNumAssign(ExpNode &exp, string var, string value) {
     return new_marker;
 }
 
-ExpNode* CodeGenerator::makeBool(ExpNode &exp){
-    if (exp.type != TYPE_BOOL) return new ExpNode(exp);
-    
-    ExpNode* new_exp = new ExpNode(TYPE_BOOL, this->freshVar());
-
-    string true_dest = "TRUE_DEST" + std::to_string(this->current_label);
-    string false_dest = "FALSE_DEST" + std::to_string(this->current_label);
-    string next_dest = "NEXT_DEST" + std::to_string(this->current_label);
-    current_label ++;
-
-    this->buffer->emit(true_dest + ":");    
-    int address_true = this->buffer->emit("br label@");
-    this->buffer->emit(false_dest + ":");
-    int address_false = this->buffer->emit("br label@");
-    this->buffer->emit(next_dest + ":");
-    
-    List next_list = this->buffer->merge(this->buffer->makelist(pair<int, BranchLabelIndex>(address_true, FIRST)),
-                               this->buffer->makelist(pair<int, BranchLabelIndex>(address_false, FIRST)));    
-
-    ///backpatching holes
-    this->buffer->bpatch(exp.true_list, true_dest);
-    this->buffer->bpatch(exp.false_list, false_dest);
-    this->buffer->bpatch(next_list, next_dest);
-    
-    this->buffer->emit(new_exp->var + " = phi i32 [1,%" + true_dest +"], [0, %" + false_dest + "]");
-    int hole = this->buffer->emit("br label @");
-    new_exp->next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(hole, FIRST));
-    return new_exp;
-}
-
 void CodeGenerator::startFunc(FuncDeclNode* func, int func_counter) {
     string args = "";
     int size = func->declarations.size();
@@ -219,7 +103,7 @@ void CodeGenerator::startFunc(FuncDeclNode* func, int func_counter) {
         if(i != size - 1) args += ", ";
     }
     string _type = (func->type == TYPE_VOID) ? "void" : "i32";
-    this->buffer->emit("define "+ _type + " @" + func->name + func_counter + "(" + args + ") {");
+    this->buffer->emit("define "+ _type + " @" + func->func_name + to_string(func_counter) + "(" + args + ") {");
     this->allocaVarsForFunc();
 }
 
@@ -233,15 +117,15 @@ void CodeGenerator::endFunc(RetTypeNode* type, StatementsNode* s, MarkerNode* ma
 
 void CodeGenerator::processFirstStatement(StatementsNode* statements, StatementNode* statement) {
     statements->start_label = statement->start_label;
-    statements->next_list = s->next_list;
+    statements->next_list = statement->next_list;
     statements->break_list = statement->break_list;
     statements->continue_list = statement->continue_list;
 }
 
 void CodeGenerator::processStatements(StatementsNode* statements, StatementNode* new_statement) {
-    this->buffer->bpatch(statements->next_list, s->start_label);
+    this->buffer->bpatch(statements->next_list, new_statement->start_label);
     statements->statements.push_back(new_statement);
-    statements->next_list = s->next_list;
+    statements->next_list = new_statement->next_list;
     statements->break_list = this->buffer->merge(statements->break_list, new_statement->break_list);
     statements->continue_list = this->buffer->merge(statements->continue_list, new_statement->continue_list);
 }
@@ -253,26 +137,88 @@ void CodeGenerator::processEndStatement(StatementNode *statement, StatementsNode
     statement->continue_list = statements->continue_list;
 }
 
-void CodeGenerator::processCall(CallNode *call, StatementNode *statement) {
+void CodeGenerator::processBoolExp(ExpNode *exp) {
+    string true_label = this->buffer->genLabel(), true_var = this->freshVar();
+    this->buffer->emit(true_var + " = zext i1 true to i32");
+    int br_true = this->buffer->emit("br label @");
+    string false_label = this->buffer->genLabel(), false_var = this->freshVar();
+    this->buffer->emit(false_var + " = zext i1 false to i32");
+    int br_false = this->buffer->emit("br label @");
+    string next_label = this->buffer->genLabel();
+    List true_list = this->buffer->makelist(pair<int, BranchLabelIndex>(br_true, FIRST));
+    List false_list = this->buffer->makelist(pair<int, BranchLabelIndex>(br_false, FIRST));
+    List next_list = this->buffer->merge(true_list, false_list);
+    
+    this->buffer->bpatch(exp->true_list, true_label);
+    this->buffer->bpatch(exp->false_list, false_label);
+    this->buffer->bpatch(next_list, next_label);
+    exp->var = this->freshVar();
+    this->buffer->emit(exp->var + " = phi i32 [ 1, %" + true_label + "], [0, %" + false_label + "]");
+    exp->next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
+}
+
+void CodeGenerator::processStatementCall(StatementNode *statement, CallNode *call) {
     statement->start_label = call->start_label;
     statement->next_list = (call->type == TYPE_BOOL) ? 
-                            this->buffer->merge(call->true_list, call->false_list) : call->next_list;
+        this->buffer->merge(call->true_list, call->false_list) : 
+        call->next_list;
+}
+
+void CodeGenerator::processCall(CallNode *call, vector<ExpNode*> exprs) {
+    call->var = this->freshVar();
+    int exprs_size = exprs.size();
+    call->start_label = exprs[exprs_size - 1]->start_label;
+    string emit_args = "", next_label;
+    int br_next;
+    for(int i = exprs_size - 1; i >= 0; --i) {
+        next_label = (i == 0) ? this->buffer->genLabel() : exprs[i - 1]->start_label;
+        if(i == 0) br_next = this->buffer->emit("br label @");
+        if(exprs[i]->type == TYPE_STRING) {
+            emit_args += "i8* " + exprs[i]->var;
+            if(i > 0) emit_args += ", ";
+        }
+        else {
+            if(exprs[i]->type == TYPE_BOOL) {
+                processBoolExp(exprs[i]);
+            }
+            emit_args += "i32 " + exprs[i]->var;
+            if(i > 0) emit_args += ", ";
+        }
+        this->buffer->bpatch(exprs[i]->next_list, next_label);
+    }
+
+    string label = this->buffer->genLabel();
+    List next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(br_next, FIRST));
+    this->buffer->bpatch(next_list, label);
+    if(call->type == TYPE_VOID) this->buffer->emit("call void @" + call->name + to_string(call->counter) + "(" + emit_args + ")");
+    else this->buffer->emit(call->var + " = call i32 @" + call->name + to_string(call->counter) + "(" + emit_args + ")");
+
+    int br_call;
+    if(call->type == TYPE_BOOL) {
+        string bool_var = this->freshVar();
+        this->buffer->emit(bool_var + " = icmp ne i32 0, " + call->var);
+        call->var = bool_var;
+        br_call = this->buffer->emit("br i1 " + call->var + ", label @, label @");
+        call->true_list = this->buffer->makelist(pair<int, BranchLabelIndex>(br_call, FIRST));
+        call->false_list = this->buffer->makelist(pair<int, BranchLabelIndex>(br_call, SECOND));
+    }
+    else {
+        br_call = this->buffer->emit("br label @");
+        call->next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(br_call, FIRST));
+    }
+
 }
 
 void CodeGenerator::processReturn(StatementNode *statement) {
     statement->start_label = this->buffer->genLabel();
     this->buffer->emit("ret void");
-    statement->next_list = this->buffer->emit(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
+    statement->next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
 }
 
 void CodeGenerator::processReturn(StatementNode *statement, ExpNode *exp) {
     statement->start_label = exp->start_label;
     List next_list;
-    if(exp->type == TYPE_BOOL) {
-        ExpNode* temp = makeBool(*exp);
-        exp->var = temp->var;
-        next_list = temp->next_list;
-    }
+    if(exp->type == TYPE_BOOL) processBoolExp(exp);
     else next_list = exp->next_list;
     string next_label = this->buffer->genLabel();
     this->buffer->emit("ret i32 " + exp->var);
@@ -280,10 +226,157 @@ void CodeGenerator::processReturn(StatementNode *statement, ExpNode *exp) {
     statement->next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
 }
 
-void codeGenerator::processIf(StatementNode &new_statement, ExpNode &exp, StatementNode &statement){
-    this->buffer->bpatch(exp.true_list, statement.start_label);
-    new_statement.start_label = exp.start_label;
-    new_statement.next_list = this->buffer->merge(exp.false_list, statement.next_list);
-    new_statement.break_list = statement.break_list;
-    new_statement.continue_list = statement.continue_list;
+void CodeGenerator::processIfElse(StatementNode *new_statement, ExpNode *exp, StatementNode *if_statement, StatementNode *else_statement) {
+    this->buffer->bpatch(exp->true_list, if_statement->start_label);
+    new_statement->start_label = exp->start_label;
+    if(else_statement) { // if else
+        this->buffer->bpatch(exp->false_list, else_statement->start_label);
+        new_statement->break_list = this->buffer->merge(if_statement->break_list, else_statement->break_list);
+        new_statement->continue_list = this->buffer->merge(if_statement->continue_list, else_statement->continue_list);
+        new_statement->next_list = this->buffer->merge(if_statement->next_list, else_statement->next_list);
+    }
+    else { // only if
+        new_statement->break_list = if_statement->break_list;
+        new_statement->continue_list = if_statement->continue_list;
+        new_statement->next_list = this->buffer->merge(exp->false_list, if_statement->next_list);
+    }
+}
+
+void CodeGenerator::processWhile(StatementNode *new_statement, ExpNode *exp, StatementNode *statement) {
+    new_statement->start_label = exp->start_label;
+    this->buffer->emit("br label %" + new_statement->start_label);
+    this->buffer->bpatch(statement->next_list, new_statement->start_label);
+    this->buffer->bpatch(statement->continue_list, new_statement->start_label);
+    this->buffer->bpatch(exp->true_list, statement->start_label);
+    new_statement->next_list = this->buffer->merge(exp->false_list, statement->break_list);
+}
+
+void CodeGenerator::processNot(ExpNode *new_exp, ExpNode *exp) {
+    new_exp->true_list = exp->false_list;
+    new_exp->false_list = exp->true_list;
+    new_exp->start_label = exp->start_label;
+}
+
+void CodeGenerator::processAnd(ExpNode *new_exp, ExpNode *exp1, ExpNode *exp2) {
+    new_exp->start_label = exp1->start_label;
+    this->buffer->bpatch(exp1->true_list, exp2->start_label);
+    new_exp->true_list = exp2->true_list;
+    new_exp->false_list = this->buffer->merge(exp1->false_list, exp2->false_list);
+}
+
+void CodeGenerator::processOr(ExpNode *new_exp, ExpNode *exp1, ExpNode *exp2) {
+    new_exp->start_label = exp1->start_label;
+    this->buffer->bpatch(exp1->false_list, exp2->start_label);
+    new_exp->true_list = this->buffer->merge(exp1->true_list, exp2->true_list);
+    new_exp->false_list = exp2->false_list;
+}
+
+void CodeGenerator::processTrueOrFalse(ExpNode *new_exp, const bool isTrue) {
+    new_exp->start_label = this->buffer->genLabel();
+    int next = this->buffer->emit("br label @");
+    List new_list = this->buffer->makelist(pair<int, BranchLabelIndex>(next, FIRST));
+    if(isTrue) new_exp->true_list = new_list;
+    else       new_exp->false_list = new_list;
+    new_exp->value = isTrue ? "true" : "false";
+}
+
+void CodeGenerator::processBreakContinue(StatementNode *statement, bool isBreak) {
+    statement->start_label = this->buffer->genLabel();
+    if(isBreak) {
+        statement->break_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
+        statement->isBreak = true;
+        return;
+    }
+    statement->continue_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
+}
+
+void CodeGenerator::processParentheses(ExpNode *new_exp, ExpNode *exp) {
+    new_exp->var = exp->var;
+    new_exp->true_list = exp->true_list;
+    new_exp->false_list = exp->false_list;
+    new_exp->next_list = exp->next_list;
+    new_exp->start_label = exp->start_label;
+    new_exp->value = exp->value;
+}
+
+void CodeGenerator::processBinop(ExpNode *new_exp, ExpNode *exp1, ExpNode *exp2, const char binop) {
+    string binop_llvm = binopToLLVM(binop, this->buffer, new_exp->type, exp2);
+    new_exp->start_label = exp1->start_label;
+    this->buffer->bpatch(exp1->next_list, exp2->start_label);
+    this->buffer->bpatch(exp2->next_list, this->buffer->genLabel());
+
+    this->buffer->emit(new_exp->var + " = " + binop_llvm + "i32 " + exp1->var + ", " + exp2->var);
+
+    if (new_exp->type == TYPE_BYTE) {
+        string temp = this->freshVar();
+        this->buffer->emit(temp + " = and i32 " + new_exp->var + ", 255");
+        new_exp->var = temp;
+    }
+
+    new_exp->next_list = this->buffer->makelist(
+                            pair<int, BranchLabelIndex>(
+                                this->buffer->emit("br label @"), FIRST));
+}
+
+void CodeGenerator::processRelop(ExpNode *new_exp, ExpNode *exp1, ExpNode *exp2, const string relop) {
+    string relop_op = relopToLLVM(relop);
+
+    if(!(relop.compare("==") == 0 || relop.compare("!=") == 0)) {
+        if(exp1->type == TYPE_BYTE && exp2->type == TYPE_BYTE) relop_op = "u" + relop_op;
+        else                                                 relop_op = "s" + relop_op;
+    }
+
+    string next_start_label = this->buffer->genLabel();
+    this->buffer->emit(new_exp->var + " = icmp " + relop_op + " i32 " + exp1->var + ", " + exp2->var);
+    int next = this->buffer->emit("br i1 " + new_exp->var + ", label @, label @");
+    new_exp->true_list = this->buffer->makelist(pair<int, BranchLabelIndex>(next, FIRST));
+    new_exp->false_list = this->buffer->makelist(pair<int, BranchLabelIndex>(next, SECOND));
+    new_exp->start_label = exp1->start_label;
+    this->buffer->bpatch(exp1->next_list, exp2->start_label);
+    this->buffer->bpatch(exp2->next_list, next_start_label);
+}
+
+void CodeGenerator::processExpCall(ExpNode *exp, CallNode *call) {
+    exp->start_label = call->start_label;
+    exp->true_list = call->true_list;
+    exp->false_list = call->false_list;
+    exp->next_list = call->next_list;
+    exp->value = call->name;
+}
+
+void CodeGenerator::processExpNum(ExpNode *exp, NumNode *num) {
+    exp->value = num->num_val;
+    exp->start_label = this->buffer->genLabel();
+    this->buffer->emit(exp->var + " = add i32 " + exp->value + ", 0");
+    exp->next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
+}
+
+void CodeGenerator::processExpString(ExpNode *exp, StringNode *string_node) {
+    string global_var = this->globalFreshVar();
+    string str = string_node->str;
+    exp->value = str;
+    str.pop_back();
+    int str_len = str.length();
+    str = "c" + str + "\\00";
+    string llvm_size = "[" + to_string(str_len) + " x i8]";
+    this->buffer->emitGlobal(global_var + " = constant " + llvm_size + " " + str + "\"");
+    exp->start_label = this->buffer->genLabel();
+    exp->var = "%" + global_var.substr(1);
+    this->buffer->emit(exp->var + " = getelementptr " + llvm_size + ", " + llvm_size + "* " + global_var + ", i32 0, i32 0");
+    exp->next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
+}
+
+void CodeGenerator::processConvertion(ExpNode *new_exp, ExpNode *exp) {
+    new_exp->start_label = exp->start_label;
+    new_exp->value = exp->value;    
+    if(new_exp->type == TYPE_BYTE && exp->type == TYPE_INT) {
+        string next_label = this->buffer->genLabel();
+        this->buffer->bpatch(exp->next_list, next_label);
+        this->buffer->emit(new_exp->var + " = and i32 " + exp->var + ", 255");
+        new_exp->next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
+    }
+    else {
+        this->buffer->emit(new_exp->var + " = add i32 " + exp->var + ", 0");
+        new_exp->next_list = exp->next_list;
+    }
 }

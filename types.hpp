@@ -73,6 +73,27 @@ public:
     NumNode(string _num_val, TypesEnum _type = TYPE_INT) : num_val(_num_val), type(_type) {};
 };
 
+class StringNode : public Node {
+public:
+    const string str;
+
+    StringNode(const string _str) : str(_str) {};
+};
+
+class BinopNode : public Node {
+public:
+    const char binop;
+
+    BinopNode(const string _binop) : binop(_binop[0]) {};
+};
+
+class RelopNode : public Node {
+public:
+    const string relop;
+
+    RelopNode(const string _relop) : relop(_relop) {};
+};
+
 /**
  * return type of func
  */
@@ -130,11 +151,12 @@ class FuncDeclNode : public Node{
 public:
     TypesEnum type;
     string func_name;
+    int counter;
     vector<FormalDeclNode*> declarations;
     List next_list;
 
-    FuncDeclNode(TypesEnum _type , string _func_name, const vector<FormalDeclNode*>& _declarations) :
-                    type(_type), func_name(_func_name), declarations(_declarations) {};
+    FuncDeclNode(TypesEnum _type , string _func_name, int _counter, const vector<FormalDeclNode*>& _declarations) :
+                    type(_type), func_name(_func_name), counter(_counter), declarations(_declarations) {};
 };
 
 /**
@@ -154,14 +176,15 @@ public:
 class CallNode : public Node {
 public:
     TypesEnum type;
-    const string call_name;
+    const string name;
+    int counter;
     string var;
     string start_label;
     List true_list;
     List false_list;
     List next_list;
 
-    CallNode(TypesEnum _type, const string _name) : type(_type), call_name(_name) {};
+    CallNode(TypesEnum _type, const string _name, int _counter) : type(_type), name(_name), counter(_counter) {};
 };
 
 /**

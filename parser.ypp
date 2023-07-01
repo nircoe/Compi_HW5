@@ -26,8 +26,7 @@
 %left OR
 %left AND
 %left RELOP
-%left PLUSMINUS
-%left MULTDIV
+%left BINOP
 %right NOT
 %left LPAREN
 %left RPAREN
@@ -42,8 +41,8 @@ Program     :   Funcs {
                         exit(1);
                     }
                     tables_stack->closeScope();
-                    code_generator->buffer->printGlobalBuffer();
-                    code_generator->buffer->printCodeBuffer();
+                    code_generator->getCodeBuffer()->printGlobalBuffer();
+                    code_generator->getCodeBuffer()->printCodeBuffer();
                     exit(0);
                 };
 Funcs       :       { }
@@ -61,7 +60,7 @@ FuncDecl    :   OverRide RetType ID LPAREN Formals {
                         exit(1);
                     }
 
-                    $$ = new FuncDeclNode(returnType->type, id->name, formals->declarations); // add counter ?
+                    $$ = new FuncDeclNode(returnType->type, id->name, counter, formals->declarations);
                     code_generator->startFunc((FuncDeclNode*)$$, counter);
                 } RPAREN LBRACE N Statements RBRACE {
                     tables_stack->curr_func_type = NULL_TYPE;
@@ -105,7 +104,8 @@ FormalDecl  :   Type ID {
                 };
 Statements  :   Statement { 
                     StatementNode* s = (StatementNode*)$1;
-                    vector<StatementNode*> s_list(s);
+                    vector<StatementNode*> s_list;
+                    s_list.push_back(s);
                     $$ = new StatementsNode(s_list);
                     code_generator->processFirstStatement((StatementsNode*)$$, s);
                 }
@@ -127,8 +127,8 @@ Statement   :   LBRACE OpenScope Statements RBRACE CloseScope {
                         exit(1);
                     }
                     $$ = new StatementNode();
-                    code_generator->initVar(id, *(StatementNode*)($$), type, tables_stack->offset);
-                    tables_stack->declVar(id->name, type->typ, id->var);
+                    code_generator->initVar(id, (StatementNode*)$$, type->type, tables_stack->offset_stack.top());
+                    tables_stack->declVar(id->name, type->type, id->var);
                  }
             |   Type ID ASSIGN Exp SC { 
                     TypeNode* type = (TypeNode*)$1;
@@ -151,7 +151,7 @@ Statement   :   LBRACE OpenScope Statements RBRACE CloseScope {
                         }
                     }
                     $$ = new StatementNode();
-                    code_generator->storeVar(*exp, *((StatementNode*)$$), tables_stack->offset_stack->top());
+                    code_generator->storeVar(exp, (StatementNode*)$$, tables_stack->offset_stack.top());
                 }
             |   ID ASSIGN Exp SC { 
                     IdNode* id = (IdNode*)$1;
@@ -160,19 +160,20 @@ Statement   :   LBRACE OpenScope Statements RBRACE CloseScope {
                         errorUndef(yylineno, id->name);
                         exit(1);
                     }
-                    TypesEnum type = tables_stack->getIDType(id->name);
+                    TypesEnum type = tables_stack->getIdType(id->name);
                     if (!AssignLegality(type, exp->type)) {
                             errorMismatch(yylineno);
                             exit(1);
                     }
                     exp->value = id->name;
-                    int offset = tables_stack->getIDOffset(id->name);
+                    int offset = tables_stack->getIdOffset(id->name);
                     $$ = new StatementNode();
-                    code_generator->storeVar(*(StatementNode*)$$, exp, offset);    
+                    code_generator->storeVar(exp, (StatementNode*)$$, offset);    
                 }
             |   Call SC { 
+                    CallNode* call = (CallNode*)$1;
                     $$ = new StatementNode();
-                    code_generator->processCall((CallNode*)$1, (StatementNode*)$$);
+                    code_generator->processStatementCall((StatementNode*)$$, call);
                 }
             |   RETURN SC { 
                     if(tables_stack->curr_func_type != TYPE_VOID) {
@@ -191,25 +192,52 @@ Statement   :   LBRACE OpenScope Statements RBRACE CloseScope {
                     $$ = new StatementNode();
                     code_generator->processReturn((StatementNode*)$$, exp);
                 }
-            |   IF LPAREN IsExpBool RPAREN OpenScope Statement CloseScope { 
+            |   IF LPAREN Exp RPAREN OpenScope Statement CloseScope { 
                     ExpNode* exp = (ExpNode*)$3;
+                    if(exp->type != TYPE_BOOL) {
+                        errorMismatch(yylineno);
+                        exit(1);
+                    }
                     StatementNode* statement = (StatementNode*)$6;
                     $$ = new StatementNode();
-                    code_generator->processIf(*(StatementNode*)$$, *exp, *statement); //////////
+                    code_generator->processIfElse((StatementNode*)$$, exp, statement);
                 } 
-            |   IF LPAREN IsExpBool RPAREN OpenScope Statement CloseScope ELSE OpenScope Statement CloseScope { }
-            |   WHILE LPAREN IsExpBool RPAREN WhileScope Statement CloseScope { }
+            |   IF LPAREN Exp RPAREN OpenScope Statement CloseScope ELSE OpenScope Statement CloseScope { 
+                    ExpNode* exp = (ExpNode*)$3;
+                    if(exp->type != TYPE_BOOL) {
+                        errorMismatch(yylineno);
+                        exit(1);
+                    }
+                    StatementNode* if_statement = (StatementNode*)$6;
+                    StatementNode* else_statement = (StatementNode*)$10;
+                    $$ = new StatementNode();
+                    code_generator->processIfElse((StatementNode*)$$, exp, if_statement, else_statement);
+                }
+            |   WHILE LPAREN Exp RPAREN WhileScope Statement CloseScope {
+                    ExpNode* exp = (ExpNode*)$3;
+                    if(exp->type != TYPE_BOOL) {
+                        errorMismatch(yylineno);
+                        exit(1);
+                    }
+                    StatementNode* statement = (StatementNode*)$6;
+                    $$ = new StatementNode();
+                    code_generator->processWhile((StatementNode*)$$, exp, statement);
+                }
             |   BREAK SC { 
                     if(!tables_stack->isCurrScopeInWhile()) {
                         errorUnexpectedBreak(yylineno);
                         exit(1);
                     }
+                    $$ = new StatementNode();
+                    code_generator->processBreakContinue((StatementNode*)$$, true);
                 }
             |   CONTINUE SC {
                     if(!tables_stack->isCurrScopeInWhile()) {
                         errorUnexpectedContinue(yylineno);
                         exit(1);
                     }
+                    $$ = new StatementNode();
+                    code_generator->processBreakContinue((StatementNode*)$$);
                 }
             ;
 Call        :   ID LPAREN ExpList RPAREN {
@@ -224,7 +252,8 @@ Call        :   ID LPAREN ExpList RPAREN {
                         exit(1);
                     }
                     int counter = tables_stack->getFuncCounter(id->name, expr_list->exprs);
-                    $$ = new CallNode(tables_stack->getFuncType(id->name, expr_list->exprs), id->name); // need to add counter;
+                    $$ = new CallNode(tables_stack->getFuncType(id->name, expr_list->exprs), id->name, counter);
+                    code_generator->processCall((CallNode*)$$, expr_list->exprs);
                 }
             |   ID LPAREN RPAREN { 
                     IdNode* id = (IdNode*)$1;
@@ -235,7 +264,8 @@ Call        :   ID LPAREN ExpList RPAREN {
                     tables_stack->checkFuncParams(id->name, yylineno);
                     vector<ExpNode*> exprs;
                     int counter = tables_stack->getFuncCounter(id->name);
-                    $$ = new CallNode(tables_stack->getFuncType(id->name, exprs), id->name); // need to add counter;
+                    $$ = new CallNode(tables_stack->getFuncType(id->name, exprs), id->name, counter);
+                    code_generator->processCall((CallNode*)$$);
                 }
             ;
 ExpList     :   Exp { 
@@ -255,19 +285,14 @@ Type        :   INT { $$ = new TypeNode(TYPE_INT); }
             |   BYTE { $$ = new TypeNode(TYPE_BYTE); }
             |   BOOL { $$ = new TypeNode(TYPE_BOOL); }
             ;
-Exp         :   LPAREN Exp RPAREN { $$ = new ExpNode(((ExpNode*)$2)->type); }
-            |   Exp PLUSMINUS Exp { 
-                    ExpNode* first = (ExpNode*)$1;
-                    ExpNode* second = (ExpNode*)$3;
-                    TypesEnum type = SumType(first->type, second->type);
-                    if (type == NULL_TYPE) {
-                        errorMismatch(yylineno);
-                        exit(1);
-                    }
-                    $$ = new ExpNode(type);
+Exp         :   LPAREN Exp RPAREN { 
+                    ExpNode* exp = (ExpNode*)$2;
+                    $$ = new ExpNode(exp->type); 
+                    code_generator->processParentheses((ExpNode*)$$, exp);
                 }
-            |   Exp MULTDIV Exp { 
+            |   Exp BINOP Exp {
                     ExpNode* first = (ExpNode*)$1;
+                    BinopNode* binop = (BinopNode*)$2;
                     ExpNode* second = (ExpNode*)$3;
                     TypesEnum type = SumType(first->type, second->type);
                     if (type == NULL_TYPE) {
@@ -275,6 +300,7 @@ Exp         :   LPAREN Exp RPAREN { $$ = new ExpNode(((ExpNode*)$2)->type); }
                         exit(1);
                     }
                     $$ = new ExpNode(type);
+                    code_generator->processBinop((ExpNode*)$$, first, second, binop->binop);
                 }
             |   ID { 
                     IdNode* id = (IdNode*)$1;
@@ -282,49 +308,74 @@ Exp         :   LPAREN Exp RPAREN { $$ = new ExpNode(((ExpNode*)$2)->type); }
                             errorUndef(yylineno, id->name);
                             exit(1);
                     }
-                    $$ = new ExpNode(tables_stack->getIDType(id->name));
+                    $$ = new ExpNode(tables_stack->getIdType(id->name));
+                    int offset = tables_stack->getIdOffset(id->name);
+                    code_generator->loadVar((ExpNode*)$$, offset);
                 }
-            |   Call { $$ = new ExpNode(((CallNode*)$1)->type); }
-            |   NUM { $$ = new ExpNode(TYPE_INT); }
+            |   Call { 
+                    CallNode* call = (CallNode*)$1;
+                    $$ = new ExpNode(call->type); 
+                    code_generator->processExpCall((ExpNode*)$$, call);
+                }
+            |   NUM { 
+                    NumNode* num = (NumNode*)$1;
+                    $$ = new ExpNode(TYPE_INT, code_generator->freshVar());
+                    code_generator->processExpNum((ExpNode*)$$, num);
+                }
             |   NUM B { 
                     NumNode* num = (NumNode*)$1;
                     if(std::stoi(num->num_val) > 255) {
                         errorByteTooLarge(yylineno, num->num_val);
                         exit(1);
                     }
-                    $$ = new ExpNode(TYPE_BYTE);
+                    $$ = new ExpNode(TYPE_BYTE, code_generator->freshVar());
+                    code_generator->processExpNum((ExpNode*)$$, num);
                 }
-            |   STRING { $$ = new ExpNode(TYPE_STRING); }
-            |   TRUE { $$ = new ExpNode(TYPE_BOOL); }
-            |   FALSE { $$ = new ExpNode(TYPE_BOOL); }
+            |   STRING { 
+                    StringNode* str = (StringNode*)$1;
+                    $$ = new ExpNode(TYPE_STRING); 
+                    code_generator->processExpString((ExpNode*)$$, str);
+                }
+            |   TRUE { 
+                    $$ = new ExpNode(TYPE_BOOL, code_generator->freshVar());
+                    code_generator->processTrueOrFalse((ExpNode*)$$, true); 
+                }
+            |   FALSE { 
+                    $$ = new ExpNode(TYPE_BOOL, code_generator->freshVar());
+                    code_generator->processTrueOrFalse((ExpNode*)$$); 
+                }
             |   NOT Exp { 
                     ExpNode* exp = (ExpNode*)$2;
-                    if (exp->type != TYPE_BOOL) {
+                    if(exp->type != TYPE_BOOL) {
                         errorMismatch(yylineno);
                         exit(1);
                     }
                     $$ = new ExpNode(TYPE_BOOL);
+                    code_generator->processNot((ExpNode*)$$, exp);
                 }
             |   Exp AND Exp { 
                     ExpNode* first = (ExpNode*)$1;
                     ExpNode* second = (ExpNode*)$3;
-                    if (first->type != TYPE_BOOL || second->type != TYPE_BOOL) {
+                    if(first->type != TYPE_BOOL || second->type != TYPE_BOOL) {
                         errorMismatch(yylineno);
                         exit(1);
                     }
                     $$ = new ExpNode(TYPE_BOOL);
+                    code_generator->processAnd((ExpNode*)$$, first, second);
                 }
             |   Exp OR Exp { 
                     ExpNode* first = (ExpNode*)$1;
                     ExpNode* second = (ExpNode*)$3;
-                    if (first->type != TYPE_BOOL || second->type != TYPE_BOOL) {
+                    if(first->type != TYPE_BOOL || second->type != TYPE_BOOL) {
                         errorMismatch(yylineno);
                         exit(1);
                     }
                     $$ = new ExpNode(TYPE_BOOL);
+                    code_generator->processOr((ExpNode*)$$, first, second);
                 }
             |   Exp RELOP Exp {
                     ExpNode* first = (ExpNode*)$1;
+                    RelopNode* relop = (RelopNode*)$2;
                     ExpNode* second = (ExpNode*)$3;
                     TypesEnum type = SumType(first->type, second->type);
                     if (type == NULL_TYPE) {
@@ -332,6 +383,7 @@ Exp         :   LPAREN Exp RPAREN { $$ = new ExpNode(((ExpNode*)$2)->type); }
                         exit(1);
                     }
                     $$ = new ExpNode(TYPE_BOOL);
+                    code_generator->processRelop((ExpNode*)$$, first, second, relop->relop);
                 }
             |   LPAREN Type RPAREN Exp {
                     TypeNode* type = (TypeNode*)$2;
@@ -340,22 +392,16 @@ Exp         :   LPAREN Exp RPAREN { $$ = new ExpNode(((ExpNode*)$2)->type); }
                         errorMismatch(yylineno);
                         exit(1);
                     }
-                    $$ = new ExpNode(type->type);
+                    $$ = new ExpNode(type->type, code_generator->freshVar());
+                    code_generator->processConvertion((ExpNode*)$$, exp);
                 }
             ;
 
 N           :   { 
-                    List next_list = code_generator->buffer->makelist(pair<int, BranchLabelIndex>(code_generator->buffer->emit("br label @"), FIRST));
+                    List next_list = code_generator->getCodeBuffer()->makelist(pair<int, BranchLabelIndex>(code_generator->getCodeBuffer()->emit("br label @"), FIRST));
                     $$ = new MarkerNode(next_list);
                 };
 
- IsExpBool  :   Exp { 
-                    ExpNode* exp = (ExpNode*)$1;
-                    if(exp->type != TYPE_BOOL) {
-                        errorMismatch(yylineno);
-                        exit(1);
-                    }
-                };
  OpenScope  :   { tables_stack->openScope(); };
  WhileScope :   { tables_stack->openScope(true); };
  CloseScope :   { tables_stack->closeScope(); };
