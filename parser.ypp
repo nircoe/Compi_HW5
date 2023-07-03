@@ -411,6 +411,7 @@ int main()
 {
     tables_stack->Init();
     code_generator = new CodeGenerator(code_buffer);
+    code_generator->emitPrint();
 	yyparse();
 }
 

@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.8.2.  */
+/* A Bison parser, made by GNU Bison 3.7.6.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
@@ -46,10 +46,10 @@
    USER NAME SPACE" below.  */
 
 /* Identify Bison output, and Bison version.  */
-#define YYBISON 30802
+#define YYBISON 30706
 
 /* Bison version string.  */
-#define YYBISON_VERSION "3.8.2"
+#define YYBISON_VERSION "3.7.6"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -327,18 +327,12 @@ typedef int yy_state_fast_t;
 # define YY_USE(E) /* empty */
 #endif
 
+#if defined __GNUC__ && ! defined __ICC && 407 <= __GNUC__ * 100 + __GNUC_MINOR__
 /* Suppress an incorrect diagnostic about yylval being uninitialized.  */
-#if defined __GNUC__ && ! defined __ICC && 406 <= __GNUC__ * 100 + __GNUC_MINOR__
-# if __GNUC__ * 100 + __GNUC_MINOR__ < 407
-#  define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN                           \
-    _Pragma ("GCC diagnostic push")                                     \
-    _Pragma ("GCC diagnostic ignored \"-Wuninitialized\"")
-# else
-#  define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN                           \
+# define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN                            \
     _Pragma ("GCC diagnostic push")                                     \
     _Pragma ("GCC diagnostic ignored \"-Wuninitialized\"")              \
     _Pragma ("GCC diagnostic ignored \"-Wmaybe-uninitialized\"")
-# endif
 # define YY_IGNORE_MAYBE_UNINITIALIZED_END      \
     _Pragma ("GCC diagnostic pop")
 #else
@@ -555,7 +549,7 @@ static const yytype_int8 yytranslate[] =
 };
 
 #if YYDEBUG
-/* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
+  /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
        0,    38,    38,    48,    49,    51,    51,    70,    71,    73,
@@ -596,6 +590,18 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
+#ifdef YYPRINT
+/* YYTOKNUM[NUM] -- (External) token number corresponding to the
+   (internal) symbol number NUM (which must be that of a token).  */
+static const yytype_int16 yytoknum[] =
+{
+       0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
+     265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
+     275,   276,   277,   278,   279,   280,   281,   282,   283,   284,
+     285,   286
+};
+#endif
+
 #define YYPACT_NINF (-79)
 
 #define yypact_value_is_default(Yyn) \
@@ -606,8 +612,8 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 #define yytable_value_is_error(Yyn) \
   0
 
-/* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
-   STATE-NUM.  */
+  /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
+     STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
        7,   -79,     6,   -79,     7,   186,   -79,   -79,   -79,   -79,
@@ -623,9 +629,9 @@ static const yytype_int16 yypact[] =
      -79,   124,   -79,   -79
 };
 
-/* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
-   Performed when YYTABLE does not specify something else to do.  Zero
-   means the default is an error.  */
+  /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
+     Performed when YYTABLE does not specify something else to do.  Zero
+     means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
        7,     8,     0,     2,     7,     0,     1,     4,    10,    34,
@@ -641,23 +647,23 @@ static const yytype_int8 yydefact[] =
       52,     0,    54,    26
 };
 
-/* YYPGOTO[NTERM-NUM].  */
+  /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
      -79,   -79,   110,   -79,   -79,   -79,   -79,   -79,    95,   -79,
       65,   -33,   -26,    30,    -1,   -25,   -79,   -78,   -79,   -40
 };
 
-/* YYDEFGOTO[NTERM-NUM].  */
+  /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
        0,     2,     3,     4,    20,     5,    12,    16,    17,    18,
       34,    35,    46,    73,    37,    74,    26,    52,    92,    93
 };
 
-/* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
-   positive, shift that token.  If negative, reduce the rule whose
-   number is the opposite.  If YYTABLE_NINF, syntax error.  */
+  /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
+     positive, shift that token.  If negative, reduce the rule whose
+     number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
       36,    56,    47,    88,    13,    91,     6,    -3,    36,    14,
@@ -706,8 +712,8 @@ static const yytype_int8 yycheck[] =
        4,     5,    -1,     7,     4,     5,    -1,     7
 };
 
-/* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
-   state STATE-NUM.  */
+  /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
+     symbol of state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
        0,     8,    33,    34,    35,    37,     0,    34,     3,     4,
@@ -723,7 +729,7 @@ static const yytype_int8 yystos[] =
       31,    49,    43,    51
 };
 
-/* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
+  /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_int8 yyr1[] =
 {
        0,    32,    33,    34,    34,    36,    35,    37,    37,    38,
@@ -734,7 +740,7 @@ static const yytype_int8 yyr1[] =
       47,    48,    49,    50,    51
 };
 
-/* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
+  /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_int8 yyr2[] =
 {
        0,     2,     1,     0,     2,     0,    11,     0,     1,     1,
@@ -754,7 +760,6 @@ enum { YYENOMEM = -2 };
 #define YYACCEPT        goto yyacceptlab
 #define YYABORT         goto yyabortlab
 #define YYERROR         goto yyerrorlab
-#define YYNOMEM         goto yyexhaustedlab
 
 
 #define YYRECOVERING()  (!!yyerrstatus)
@@ -795,7 +800,10 @@ do {                                            \
     YYFPRINTF Args;                             \
 } while (0)
 
-
+/* This macro is provided for backward compatibility. */
+# ifndef YY_LOCATION_PRINT
+#  define YY_LOCATION_PRINT(File, Loc) ((void) 0)
+# endif
 
 
 # define YY_SYMBOL_PRINT(Title, Kind, Value, Location)                    \
@@ -822,6 +830,10 @@ yy_symbol_value_print (FILE *yyo,
   YY_USE (yyoutput);
   if (!yyvaluep)
     return;
+# ifdef YYPRINT
+  if (yykind < YYNTOKENS)
+    YYPRINT (yyo, yytoknum[yykind], *yyvaluep);
+# endif
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
   YY_USE (yykind);
   YY_IGNORE_MAYBE_UNINITIALIZED_END
@@ -1006,7 +1018,6 @@ yyparse (void)
   YYDPRINTF ((stderr, "Starting parse\n"));
 
   yychar = YYEMPTY; /* Cause a token to be read.  */
-
   goto yysetstate;
 
 
@@ -1032,7 +1043,7 @@ yysetstate:
 
   if (yyss + yystacksize - 1 <= yyssp)
 #if !defined yyoverflow && !defined YYSTACK_RELOCATE
-    YYNOMEM;
+    goto yyexhaustedlab;
 #else
     {
       /* Get the current used size of the three stacks, in elements.  */
@@ -1060,7 +1071,7 @@ yysetstate:
 # else /* defined YYSTACK_RELOCATE */
       /* Extend the stack our own way.  */
       if (YYMAXDEPTH <= yystacksize)
-        YYNOMEM;
+        goto yyexhaustedlab;
       yystacksize *= 2;
       if (YYMAXDEPTH < yystacksize)
         yystacksize = YYMAXDEPTH;
@@ -1071,7 +1082,7 @@ yysetstate:
           YY_CAST (union yyalloc *,
                    YYSTACK_ALLOC (YY_CAST (YYSIZE_T, YYSTACK_BYTES (yystacksize))));
         if (! yyptr)
-          YYNOMEM;
+          goto yyexhaustedlab;
         YYSTACK_RELOCATE (yyss_alloc, yyss);
         YYSTACK_RELOCATE (yyvs_alloc, yyvs);
 #  undef YYSTACK_RELOCATE
@@ -1092,7 +1103,6 @@ yysetstate:
         YYABORT;
     }
 #endif /* !defined yyoverflow && !defined YYSTACK_RELOCATE */
-
 
   if (yystate == YYFINAL)
     YYACCEPT;
@@ -1217,19 +1227,19 @@ yyreduce:
                     code_generator->getCodeBuffer()->printCodeBuffer();
                     exit(0);
                 }
-#line 1221 "parser.tab.cpp"
+#line 1231 "parser.tab.cpp"
     break;
 
   case 3: /* Funcs: %empty  */
 #line 48 "parser.ypp"
                     { }
-#line 1227 "parser.tab.cpp"
+#line 1237 "parser.tab.cpp"
     break;
 
   case 4: /* Funcs: FuncDecl Funcs  */
 #line 49 "parser.ypp"
                                { }
-#line 1233 "parser.tab.cpp"
+#line 1243 "parser.tab.cpp"
     break;
 
   case 5: /* @1: %empty  */
@@ -1249,7 +1259,7 @@ yyreduce:
                     yyval = new FuncDeclNode(returnType->type, id->name, counter, formals->declarations);
                     code_generator->startFunc((FuncDeclNode*)yyval, counter);
                 }
-#line 1253 "parser.tab.cpp"
+#line 1263 "parser.tab.cpp"
     break;
 
   case 6: /* FuncDecl: OverRide RetType ID LPAREN Formals @1 RPAREN LBRACE N Statements RBRACE  */
@@ -1259,19 +1269,19 @@ yyreduce:
                     code_generator->endFunc((RetTypeNode*)yyvsp[-9], (StatementsNode*)yyvsp[-1], (MarkerNode*)yyvsp[-2]); // check if statements is $10 or $9
                     tables_stack->closeScope();   
                 }
-#line 1263 "parser.tab.cpp"
+#line 1273 "parser.tab.cpp"
     break;
 
   case 7: /* OverRide: %empty  */
 #line 70 "parser.ypp"
                     { yyval = new OverrideNode(); }
-#line 1269 "parser.tab.cpp"
+#line 1279 "parser.tab.cpp"
     break;
 
   case 8: /* OverRide: OVERRIDE  */
 #line 71 "parser.ypp"
                          { yyval = new OverrideNode(true); }
-#line 1275 "parser.tab.cpp"
+#line 1285 "parser.tab.cpp"
     break;
 
   case 9: /* RetType: Type  */
@@ -1280,25 +1290,25 @@ yyreduce:
                     TypeNode* type = (TypeNode*)yyvsp[0];
                     yyval = new RetTypeNode(type->type);
                 }
-#line 1284 "parser.tab.cpp"
+#line 1294 "parser.tab.cpp"
     break;
 
   case 10: /* RetType: VOID  */
 #line 77 "parser.ypp"
                      { yyval = new RetTypeNode(TYPE_VOID); }
-#line 1290 "parser.tab.cpp"
+#line 1300 "parser.tab.cpp"
     break;
 
   case 11: /* Formals: %empty  */
 #line 79 "parser.ypp"
                     { yyval = new FormalsNode(); }
-#line 1296 "parser.tab.cpp"
+#line 1306 "parser.tab.cpp"
     break;
 
   case 12: /* Formals: FormalsList  */
 #line 80 "parser.ypp"
                             { yyval = new FormalsNode(((FormalsListNode*)yyvsp[0])->declarations); }
-#line 1302 "parser.tab.cpp"
+#line 1312 "parser.tab.cpp"
     break;
 
   case 13: /* FormalsList: FormalDecl  */
@@ -1308,7 +1318,7 @@ yyreduce:
                     vec.insert(vec.begin(), (FormalDeclNode*)yyvsp[0]);
                     yyval = new FormalsListNode(vec);
                 }
-#line 1312 "parser.tab.cpp"
+#line 1322 "parser.tab.cpp"
     break;
 
   case 14: /* FormalsList: FormalDecl COMMA FormalsList  */
@@ -1320,7 +1330,7 @@ yyreduce:
 
                     yyval = new FormalsListNode(formal_list->declarations);
                 }
-#line 1324 "parser.tab.cpp"
+#line 1334 "parser.tab.cpp"
     break;
 
   case 15: /* FormalDecl: Type ID  */
@@ -1335,7 +1345,7 @@ yyreduce:
                     id->var = code_generator->freshVar();
                     yyval = new FormalDeclNode(type->type, id->name, id->var);
                 }
-#line 1339 "parser.tab.cpp"
+#line 1349 "parser.tab.cpp"
     break;
 
   case 16: /* Statements: Statement  */
@@ -1347,7 +1357,7 @@ yyreduce:
                     yyval = new StatementsNode(s_list);
                     code_generator->processFirstStatement((StatementsNode*)yyval, s);
                 }
-#line 1351 "parser.tab.cpp"
+#line 1361 "parser.tab.cpp"
     break;
 
   case 17: /* Statements: Statements Statement  */
@@ -1356,7 +1366,7 @@ yyreduce:
                     yyval = (StatementsNode*)yyvsp[-1];
                     code_generator->processStatements((StatementsNode*)yyval, (StatementNode*)yyvsp[0]);
                 }
-#line 1360 "parser.tab.cpp"
+#line 1370 "parser.tab.cpp"
     break;
 
   case 18: /* Statement: LBRACE OpenScope Statements RBRACE CloseScope  */
@@ -1366,7 +1376,7 @@ yyreduce:
                     yyval = new StatementNode();
                     code_generator->processEndStatement((StatementNode*)(yyval), statements);
                 }
-#line 1370 "parser.tab.cpp"
+#line 1380 "parser.tab.cpp"
     break;
 
   case 19: /* Statement: Type ID SC  */
@@ -1382,7 +1392,7 @@ yyreduce:
                     code_generator->initVar(id, (StatementNode*)yyval, type->type, tables_stack->offset_stack.top());
                     tables_stack->declVar(id->name, type->type, id->var);
                  }
-#line 1386 "parser.tab.cpp"
+#line 1396 "parser.tab.cpp"
     break;
 
   case 20: /* Statement: Type ID ASSIGN Exp SC  */
@@ -1410,7 +1420,7 @@ yyreduce:
                     yyval = new StatementNode();
                     code_generator->storeVar(exp, (StatementNode*)yyval, tables_stack->offset_stack.top());
                 }
-#line 1414 "parser.tab.cpp"
+#line 1424 "parser.tab.cpp"
     break;
 
   case 21: /* Statement: ID ASSIGN Exp SC  */
@@ -1432,7 +1442,7 @@ yyreduce:
                     yyval = new StatementNode();
                     code_generator->storeVar(exp, (StatementNode*)yyval, offset);    
                 }
-#line 1436 "parser.tab.cpp"
+#line 1446 "parser.tab.cpp"
     break;
 
   case 22: /* Statement: Call SC  */
@@ -1442,7 +1452,7 @@ yyreduce:
                     yyval = new StatementNode();
                     code_generator->processStatementCall((StatementNode*)yyval, call);
                 }
-#line 1446 "parser.tab.cpp"
+#line 1456 "parser.tab.cpp"
     break;
 
   case 23: /* Statement: RETURN SC  */
@@ -1455,7 +1465,7 @@ yyreduce:
                     yyval = new StatementNode();
                     code_generator->processReturn((StatementNode*)yyval);
                 }
-#line 1459 "parser.tab.cpp"
+#line 1469 "parser.tab.cpp"
     break;
 
   case 24: /* Statement: RETURN Exp SC  */
@@ -1469,7 +1479,7 @@ yyreduce:
                     yyval = new StatementNode();
                     code_generator->processReturn((StatementNode*)yyval, exp);
                 }
-#line 1473 "parser.tab.cpp"
+#line 1483 "parser.tab.cpp"
     break;
 
   case 25: /* Statement: IF LPAREN Exp RPAREN OpenScope Statement CloseScope  */
@@ -1484,7 +1494,7 @@ yyreduce:
                     yyval = new StatementNode();
                     code_generator->processIfElse((StatementNode*)yyval, exp, statement);
                 }
-#line 1488 "parser.tab.cpp"
+#line 1498 "parser.tab.cpp"
     break;
 
   case 26: /* Statement: IF LPAREN Exp RPAREN OpenScope Statement CloseScope ELSE OpenScope Statement CloseScope  */
@@ -1500,7 +1510,7 @@ yyreduce:
                     yyval = new StatementNode();
                     code_generator->processIfElse((StatementNode*)yyval, exp, if_statement, else_statement);
                 }
-#line 1504 "parser.tab.cpp"
+#line 1514 "parser.tab.cpp"
     break;
 
   case 27: /* Statement: WHILE LPAREN Exp RPAREN WhileScope Statement CloseScope  */
@@ -1515,7 +1525,7 @@ yyreduce:
                     yyval = new StatementNode();
                     code_generator->processWhile((StatementNode*)yyval, exp, statement);
                 }
-#line 1519 "parser.tab.cpp"
+#line 1529 "parser.tab.cpp"
     break;
 
   case 28: /* Statement: BREAK SC  */
@@ -1528,7 +1538,7 @@ yyreduce:
                     yyval = new StatementNode();
                     code_generator->processBreakContinue((StatementNode*)yyval, true);
                 }
-#line 1532 "parser.tab.cpp"
+#line 1542 "parser.tab.cpp"
     break;
 
   case 29: /* Statement: CONTINUE SC  */
@@ -1541,7 +1551,7 @@ yyreduce:
                     yyval = new StatementNode();
                     code_generator->processBreakContinue((StatementNode*)yyval);
                 }
-#line 1545 "parser.tab.cpp"
+#line 1555 "parser.tab.cpp"
     break;
 
   case 30: /* Call: ID LPAREN ExpList RPAREN  */
@@ -1561,7 +1571,7 @@ yyreduce:
                     yyval = new CallNode(tables_stack->getFuncType(id->name, expr_list->exprs), id->name, counter);
                     code_generator->processCall((CallNode*)yyval, expr_list->exprs);
                 }
-#line 1565 "parser.tab.cpp"
+#line 1575 "parser.tab.cpp"
     break;
 
   case 31: /* Call: ID LPAREN RPAREN  */
@@ -1578,7 +1588,7 @@ yyreduce:
                     yyval = new CallNode(tables_stack->getFuncType(id->name, exprs), id->name, counter);
                     code_generator->processCall((CallNode*)yyval);
                 }
-#line 1582 "parser.tab.cpp"
+#line 1592 "parser.tab.cpp"
     break;
 
   case 32: /* ExpList: Exp  */
@@ -1589,7 +1599,7 @@ yyreduce:
                     exps.insert(exps.begin(), exp);
                     yyval = new ExpListNode(exps);
                 }
-#line 1593 "parser.tab.cpp"
+#line 1603 "parser.tab.cpp"
     break;
 
   case 33: /* ExpList: Exp COMMA ExpList  */
@@ -1600,25 +1610,25 @@ yyreduce:
                     expr_list->exprs.insert(expr_list->exprs.begin(), exp);
                     yyval = new ExpListNode(expr_list->exprs);
                 }
-#line 1604 "parser.tab.cpp"
+#line 1614 "parser.tab.cpp"
     break;
 
   case 34: /* Type: INT  */
 #line 284 "parser.ypp"
                     { yyval = new TypeNode(TYPE_INT); }
-#line 1610 "parser.tab.cpp"
+#line 1620 "parser.tab.cpp"
     break;
 
   case 35: /* Type: BYTE  */
 #line 285 "parser.ypp"
                      { yyval = new TypeNode(TYPE_BYTE); }
-#line 1616 "parser.tab.cpp"
+#line 1626 "parser.tab.cpp"
     break;
 
   case 36: /* Type: BOOL  */
 #line 286 "parser.ypp"
                      { yyval = new TypeNode(TYPE_BOOL); }
-#line 1622 "parser.tab.cpp"
+#line 1632 "parser.tab.cpp"
     break;
 
   case 37: /* Exp: LPAREN Exp RPAREN  */
@@ -1628,7 +1638,7 @@ yyreduce:
                     yyval = new ExpNode(exp->type); 
                     code_generator->processParentheses((ExpNode*)yyval, exp);
                 }
-#line 1632 "parser.tab.cpp"
+#line 1642 "parser.tab.cpp"
     break;
 
   case 38: /* Exp: Exp BINOP Exp  */
@@ -1645,7 +1655,7 @@ yyreduce:
                     yyval = new ExpNode(type);
                     code_generator->processBinop((ExpNode*)yyval, first, second, binop->binop);
                 }
-#line 1649 "parser.tab.cpp"
+#line 1659 "parser.tab.cpp"
     break;
 
   case 39: /* Exp: ID  */
@@ -1660,7 +1670,7 @@ yyreduce:
                     int offset = tables_stack->getIdOffset(id->name);
                     code_generator->loadVar((ExpNode*)yyval, offset);
                 }
-#line 1664 "parser.tab.cpp"
+#line 1674 "parser.tab.cpp"
     break;
 
   case 40: /* Exp: Call  */
@@ -1670,7 +1680,7 @@ yyreduce:
                     yyval = new ExpNode(call->type); 
                     code_generator->processExpCall((ExpNode*)yyval, call);
                 }
-#line 1674 "parser.tab.cpp"
+#line 1684 "parser.tab.cpp"
     break;
 
   case 41: /* Exp: NUM  */
@@ -1680,7 +1690,7 @@ yyreduce:
                     yyval = new ExpNode(TYPE_INT, code_generator->freshVar());
                     code_generator->processExpNum((ExpNode*)yyval, num);
                 }
-#line 1684 "parser.tab.cpp"
+#line 1694 "parser.tab.cpp"
     break;
 
   case 42: /* Exp: NUM B  */
@@ -1694,7 +1704,7 @@ yyreduce:
                     yyval = new ExpNode(TYPE_BYTE, code_generator->freshVar());
                     code_generator->processExpNum((ExpNode*)yyval, num);
                 }
-#line 1698 "parser.tab.cpp"
+#line 1708 "parser.tab.cpp"
     break;
 
   case 43: /* Exp: STRING  */
@@ -1704,7 +1714,7 @@ yyreduce:
                     yyval = new ExpNode(TYPE_STRING); 
                     code_generator->processExpString((ExpNode*)yyval, str);
                 }
-#line 1708 "parser.tab.cpp"
+#line 1718 "parser.tab.cpp"
     break;
 
   case 44: /* Exp: TRUE  */
@@ -1713,7 +1723,7 @@ yyreduce:
                     yyval = new ExpNode(TYPE_BOOL, code_generator->freshVar());
                     code_generator->processTrueOrFalse((ExpNode*)yyval, true); 
                 }
-#line 1717 "parser.tab.cpp"
+#line 1727 "parser.tab.cpp"
     break;
 
   case 45: /* Exp: FALSE  */
@@ -1722,7 +1732,7 @@ yyreduce:
                     yyval = new ExpNode(TYPE_BOOL, code_generator->freshVar());
                     code_generator->processTrueOrFalse((ExpNode*)yyval); 
                 }
-#line 1726 "parser.tab.cpp"
+#line 1736 "parser.tab.cpp"
     break;
 
   case 46: /* Exp: NOT Exp  */
@@ -1736,7 +1746,7 @@ yyreduce:
                     yyval = new ExpNode(TYPE_BOOL);
                     code_generator->processNot((ExpNode*)yyval, exp);
                 }
-#line 1740 "parser.tab.cpp"
+#line 1750 "parser.tab.cpp"
     break;
 
   case 47: /* Exp: Exp AND Exp  */
@@ -1751,7 +1761,7 @@ yyreduce:
                     yyval = new ExpNode(TYPE_BOOL);
                     code_generator->processAnd((ExpNode*)yyval, first, second);
                 }
-#line 1755 "parser.tab.cpp"
+#line 1765 "parser.tab.cpp"
     break;
 
   case 48: /* Exp: Exp OR Exp  */
@@ -1766,7 +1776,7 @@ yyreduce:
                     yyval = new ExpNode(TYPE_BOOL);
                     code_generator->processOr((ExpNode*)yyval, first, second);
                 }
-#line 1770 "parser.tab.cpp"
+#line 1780 "parser.tab.cpp"
     break;
 
   case 49: /* Exp: Exp RELOP Exp  */
@@ -1783,7 +1793,7 @@ yyreduce:
                     yyval = new ExpNode(TYPE_BOOL);
                     code_generator->processRelop((ExpNode*)yyval, first, second, relop->relop);
                 }
-#line 1787 "parser.tab.cpp"
+#line 1797 "parser.tab.cpp"
     break;
 
   case 50: /* Exp: LPAREN Type RPAREN Exp  */
@@ -1798,7 +1808,7 @@ yyreduce:
                     yyval = new ExpNode(type->type, code_generator->freshVar());
                     code_generator->processConvertion((ExpNode*)yyval, exp);
                 }
-#line 1802 "parser.tab.cpp"
+#line 1812 "parser.tab.cpp"
     break;
 
   case 51: /* N: %empty  */
@@ -1807,29 +1817,29 @@ yyreduce:
                     List next_list = code_generator->getCodeBuffer()->makelist(pair<int, BranchLabelIndex>(code_generator->getCodeBuffer()->emit("br label @"), FIRST));
                     yyval = new MarkerNode(next_list);
                 }
-#line 1811 "parser.tab.cpp"
+#line 1821 "parser.tab.cpp"
     break;
 
   case 52: /* OpenScope: %empty  */
 #line 405 "parser.ypp"
                 { tables_stack->openScope(); }
-#line 1817 "parser.tab.cpp"
+#line 1827 "parser.tab.cpp"
     break;
 
   case 53: /* WhileScope: %empty  */
 #line 406 "parser.ypp"
                 { tables_stack->openScope(true); }
-#line 1823 "parser.tab.cpp"
+#line 1833 "parser.tab.cpp"
     break;
 
   case 54: /* CloseScope: %empty  */
 #line 407 "parser.ypp"
                 { tables_stack->closeScope(); }
-#line 1829 "parser.tab.cpp"
+#line 1839 "parser.tab.cpp"
     break;
 
 
-#line 1833 "parser.tab.cpp"
+#line 1843 "parser.tab.cpp"
 
       default: break;
     }
@@ -1911,7 +1921,6 @@ yyerrorlab:
      label yyerrorlab therefore never appears in user code.  */
   if (0)
     YYERROR;
-  ++yynerrs;
 
   /* Do not reclaim the symbols of the rule whose action triggered
      this YYERROR.  */
@@ -1972,7 +1981,7 @@ yyerrlab1:
 `-------------------------------------*/
 yyacceptlab:
   yyresult = 0;
-  goto yyreturnlab;
+  goto yyreturn;
 
 
 /*-----------------------------------.
@@ -1980,22 +1989,24 @@ yyacceptlab:
 `-----------------------------------*/
 yyabortlab:
   yyresult = 1;
-  goto yyreturnlab;
+  goto yyreturn;
 
 
-/*-----------------------------------------------------------.
-| yyexhaustedlab -- YYNOMEM (memory exhaustion) comes here.  |
-`-----------------------------------------------------------*/
+#if !defined yyoverflow
+/*-------------------------------------------------.
+| yyexhaustedlab -- memory exhaustion comes here.  |
+`-------------------------------------------------*/
 yyexhaustedlab:
   yyerror (YY_("memory exhausted"));
   yyresult = 2;
-  goto yyreturnlab;
+  goto yyreturn;
+#endif
 
 
-/*----------------------------------------------------------.
-| yyreturnlab -- parsing is finished, clean up and return.  |
-`----------------------------------------------------------*/
-yyreturnlab:
+/*-------------------------------------------------------.
+| yyreturn -- parsing is finished, clean up and return.  |
+`-------------------------------------------------------*/
+yyreturn:
   if (yychar != YYEMPTY)
     {
       /* Make sure we have latest lookahead translation.  See comments at
@@ -2029,6 +2040,7 @@ int main()
 {
     tables_stack->Init();
     code_generator = new CodeGenerator(code_buffer);
+    code_generator->emitPrint();
 	yyparse();
 }
 
