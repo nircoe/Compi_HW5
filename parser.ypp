@@ -151,7 +151,8 @@ Statement   :   LBRACE OpenScope Statements RBRACE CloseScope {
                         }
                     }
                     $$ = new StatementNode();
-                    code_generator->storeVar(exp, (StatementNode*)$$, tables_stack->offset_stack.top());
+                    int offset = tables_stack->getIdOffset(id->name);
+                    code_generator->storeVar(exp, (StatementNode*)$$, offset);
                 }
             |   ID ASSIGN Exp SC { 
                     IdNode* id = (IdNode*)$1;
@@ -299,7 +300,7 @@ Exp         :   LPAREN Exp RPAREN {
                         errorMismatch(yylineno);
                         exit(1);
                     }
-                    $$ = new ExpNode(type);
+                    $$ = new ExpNode(type, code_generator->freshVar());
                     code_generator->processBinop((ExpNode*)$$, first, second, binop->binop);
                 }
             |   ID { 
@@ -382,7 +383,7 @@ Exp         :   LPAREN Exp RPAREN {
                         errorMismatch(yylineno);
                         exit(1);
                     }
-                    $$ = new ExpNode(TYPE_BOOL);
+                    $$ = new ExpNode(TYPE_BOOL,code_generator->freshVar());
                     code_generator->processRelop((ExpNode*)$$, first, second, relop->relop);
                 }
             |   LPAREN Type RPAREN Exp {

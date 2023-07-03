@@ -1,25 +1,59 @@
 #include "code_generator.hpp"
 
+void CodeGenerator::emitPrint(){
+
+    this->buffer->emit("declare i32 @printf(i8*, ...)");
+    this->buffer->emit("declare void @exit(i32)");
+    this->buffer->emit("@.int_specifier = constant [4 x i8] c\"%d\\0A\\00\"");
+    this->buffer->emit("@.str_specifier = constant [4 x i8] c\"%s\\0A\\00\"");
+    this->buffer->emit("@.check_division_string = constant [23 x i8] c\"Error division by zero\\00\"");
+    this->buffer->emit("");
+    this->buffer->emit("define void @printi0(i32) {");
+    this->buffer->emit("  %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.int_specifier, i32 0, i32 0");
+    this->buffer->emit("  call i32 (i8*, ...) @printf(i8* %spec_ptr, i32 %0)");
+    this->buffer->emit("  ret void");
+    this->buffer->emit("}");
+    this->buffer->emit("");
+    this->buffer->emit("define void @print0(i8*) {");
+    this->buffer->emit("  %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.str_specifier, i32 0, i32 0");
+    this->buffer->emit("  call i32 (i8*, ...) @printf(i8* %spec_ptr, i8* %0)");
+    this->buffer->emit("  ret void");
+    this->buffer->emit("}");
+    this->buffer->emit("");
+    this->buffer->emit("define void @check_division(i32) {");
+    this->buffer->emit("  %zero = icmp ne i32 %0, 0");
+    this->buffer->emit("  br i1 %zero, label %true_label, label %false_label");
+    this->buffer->emit("  true_label:");
+    this->buffer->emit("      ret void");
+    this->buffer->emit("  false_label:");
+    this->buffer->emit("      %str = getelementptr [23 x i8], [23 x i8]* @.check_division_string, i32 0, i32 0");
+    this->buffer->emit("      call void @print0(i8* %str)");
+    this->buffer->emit("      call void @exit(i32 1)");
+    this->buffer->emit("      ret void");
+    this->buffer->emit("}");
+    this->buffer->emit("");
+}
+
 string CodeGenerator::freshVar() {
-    return "%var" + this->getCurrentReg(true);
+    return "%var" + to_string(this->getCurrentReg(true));
 }
 
 string CodeGenerator::globalFreshVar() {
-    return "@.var" + this->getCurrentReg(true);
+    return "@.var" + to_string(this->getCurrentReg(true));
 }
 
 string binopToLLVM(const char binop, CodeBuffer* buffer, TypesEnum type, ExpNode *exp2) {
     switch(binop) {
         case '+':
-            return "add";
+            return "add ";
         case '-':
-            return "sub";
+            return "sub ";
         case '*':
-            return "mul";
+            return "mul ";
         case '/':
-            buffer->emit("call void @division_by_zero(i32 " + exp2->var + ")");
-            if(type == TYPE_BYTE) return "udiv";
-            else if(type == TYPE_INT) return "sdiv";
+            buffer->emit("call void @check_division(i32 " + exp2->var + ")"); // need to add this function to llvm file
+            if(type == TYPE_BYTE) return "udiv ";
+            else if(type == TYPE_INT) return "sdiv ";
     }
     return ""; // error
 }
@@ -40,14 +74,14 @@ void CodeGenerator::allocaVarsForFunc() {
 }
 
 void CodeGenerator::storeVar(ExpNode *exp, StatementNode *sn, int offset) {
-    List next_list = exp->next_list;
+    // List next_list = exp->next_list;
     if(exp->type == TYPE_BOOL) processBoolExp(exp);
     string new_label = this->buffer->genLabel();
-    this->buffer->bpatch(next_list, new_label);
+    this->buffer->bpatch(exp->next_list, new_label);
     sn->start_label = exp->start_label;
     string var_ptr = this->freshVar();
-    this->buffer->emit(var_ptr + " = getelementptr [50 x i32], [50 x i32]*" + this->func_vars_arr + ", i32 0, i32 " + to_string(offset));
-    this->buffer->emit("store i32" + exp->var + ", i32*" + var_ptr);
+    this->buffer->emit(var_ptr + " = getelementptr [50 x i32], [50 x i32]* " + this->func_vars_arr + ", i32 0, i32 " + to_string(offset));
+    this->buffer->emit("store i32 " + exp->var + ", i32* " + var_ptr);
     sn->next_list = this->buffer->makelist(pair<int,BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
 }
 
@@ -63,7 +97,7 @@ void CodeGenerator::initVar(IdNode* id, StatementNode *sn, TypesEnum type, int o
         this->buffer->emit(temp + " = icmp eq i32 0, 1"); // init false, i1
         this->buffer->emit(id->var + " = zext i1 " + temp + " to i32"); // extend to i32
     }
-    this->buffer->emit(ptr + " = getelementptr [50 x i32], [50 x i32]*" + this->func_vars_arr + ", i32 0, i32 " + to_string(offset));
+    this->buffer->emit(ptr + " = getelementptr [50 x i32], [50 x i32]* " + this->func_vars_arr + ", i32 0, i32 " + to_string(offset));
     this->buffer->emit("store i32 " + id->var + ", i32* " + ptr);
     sn->next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
 }
@@ -73,10 +107,10 @@ void CodeGenerator::loadVar(ExpNode *exp, int offset) {
     if(offset >= 0) {
         exp->var = this->freshVar();
         string ptr = this->freshVar();
-        this->buffer->emit(ptr + " = getelementptr [50 x i32], [50 x i32]*" + this->func_vars_arr + ", i32 0, i32 " + to_string(offset));
+        this->buffer->emit(ptr + " = getelementptr [50 x i32], [50 x i32]* " + this->func_vars_arr + ", i32 0, i32 " + to_string(offset));
         this->buffer->emit(exp->var + " = load i32, i32* " + ptr);
     }
-    else exp->var = "%" + to_string(offset);
+    else exp->var = "%" + to_string((offset + 1) * (-1));
     if(exp->type == TYPE_BOOL) {
         string is_true = this->freshVar();
         this->buffer->emit(is_true + " = icmp ne i32 " + exp->var + ", 0");
@@ -103,7 +137,11 @@ void CodeGenerator::startFunc(FuncDeclNode* func, int func_counter) {
         if(i != size - 1) args += ", ";
     }
     string _type = (func->type == TYPE_VOID) ? "void" : "i32";
-    this->buffer->emit("define "+ _type + " @" + func->func_name + to_string(func_counter) + "(" + args + ") {");
+    string count = to_string(func_counter);
+    if (func->func_name.compare("main") == 0){
+        count = "";
+    }
+    this->buffer->emit("define "+ _type + " @" + func->func_name + count + "(" + args + ") {");
     this->allocaVarsForFunc();
 }
 
@@ -112,7 +150,8 @@ void CodeGenerator::endFunc(RetTypeNode* type, StatementsNode* s, MarkerNode* ma
     string next_label = this->buffer->genLabel();
     this->buffer->bpatch(s->next_list, next_label);
     string ret_type = (type->type == TYPE_VOID) ? "void" : "i32 0";
-    this->buffer->emit("ret " + ret_type + " }");
+    this->buffer->emit("ret " + ret_type);
+    this->buffer->emit("}");
 }
 
 void CodeGenerator::processFirstStatement(StatementsNode* statements, StatementNode* statement) {
@@ -153,7 +192,7 @@ void CodeGenerator::processBoolExp(ExpNode *exp) {
     this->buffer->bpatch(exp->false_list, false_label);
     this->buffer->bpatch(next_list, next_label);
     exp->var = this->freshVar();
-    this->buffer->emit(exp->var + " = phi i32 [ 1, %" + true_label + "], [0, %" + false_label + "]");
+    this->buffer->emit(exp->var + " = phi i32 [1, %" + true_label + "], [0, %" + false_label + "]");
     exp->next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
 }
 
@@ -300,11 +339,10 @@ void CodeGenerator::processParentheses(ExpNode *new_exp, ExpNode *exp) {
 }
 
 void CodeGenerator::processBinop(ExpNode *new_exp, ExpNode *exp1, ExpNode *exp2, const char binop) {
-    string binop_llvm = binopToLLVM(binop, this->buffer, new_exp->type, exp2);
-    if(binop_llvm.compare("") == 0 ) // error
     new_exp->start_label = exp1->start_label;
     this->buffer->bpatch(exp1->next_list, exp2->start_label);
     this->buffer->bpatch(exp2->next_list, this->buffer->genLabel());
+    string binop_llvm = binopToLLVM(binop, this->buffer, new_exp->type, exp2);
 
     this->buffer->emit(new_exp->var + " = " + binop_llvm + "i32 " + exp1->var + ", " + exp2->var);
 
@@ -321,7 +359,7 @@ void CodeGenerator::processBinop(ExpNode *new_exp, ExpNode *exp1, ExpNode *exp2,
 
 void CodeGenerator::processRelop(ExpNode *new_exp, ExpNode *exp1, ExpNode *exp2, const string relop) {
     string relop_op = relopToLLVM(relop);
-    if(relop_op.compare("") == 0 ) // error
+
     if(!(relop.compare("==") == 0 || relop.compare("!=") == 0)) {
         if(exp1->type == TYPE_BYTE && exp2->type == TYPE_BYTE) relop_op = "u" + relop_op;
         else                                                 relop_op = "s" + relop_op;
@@ -343,6 +381,7 @@ void CodeGenerator::processExpCall(ExpNode *exp, CallNode *call) {
     exp->false_list = call->false_list;
     exp->next_list = call->next_list;
     exp->value = call->name;
+    exp->var = call->var;
 }
 
 void CodeGenerator::processExpNum(ExpNode *exp, NumNode *num) {
@@ -359,11 +398,13 @@ void CodeGenerator::processExpString(ExpNode *exp, StringNode *string_node) {
     str.pop_back();
     int str_len = str.length();
     str = "c" + str + "\\00";
-    string llvm_size = "[" + to_string(str_len) + " x i8]";
+    string llvm_size = "[" + to_string(str_len)  + " x i8]";
     this->buffer->emitGlobal(global_var + " = constant " + llvm_size + " " + str + "\"");
     exp->start_label = this->buffer->genLabel();
-    exp->var = "%" + global_var.substr(1);
-    this->buffer->emit(exp->var + " = getelementptr " + llvm_size + ", " + llvm_size + "* " + global_var + ", i32 0, i32 0");
+    string global_var_temp = global_var;
+    std::replace(global_var.begin(), global_var.end(), '@', '%');
+    exp->var =global_var;
+    this->buffer->emit(exp->var + " = getelementptr " + llvm_size + ", " + llvm_size + "* " + global_var_temp + ", i32 0, i32 0");
     exp->next_list = this->buffer->makelist(pair<int, BranchLabelIndex>(this->buffer->emit("br label @"), FIRST));
 }
 

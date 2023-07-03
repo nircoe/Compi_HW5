@@ -7,6 +7,7 @@
 #include <queue>
 #include "bp.hpp"
 #include "types.hpp"
+#include <algorithm>
 
 using std::string;
 using std::stack;
@@ -28,6 +29,7 @@ class CodeGenerator {
         int getCurrentLabel(bool increase = false) { return (increase) ? current_label++ : current_label; }
         void increaseCurrentLabel() { current_label++; }
 
+        void emitPrint();
         string freshVar();
         string globalFreshVar();
         void allocaVarsForFunc();

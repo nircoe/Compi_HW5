@@ -270,7 +270,7 @@ void TablesStack::openScope(bool isWhileLoop) {
 }
 
 
-void TablesStack::closeScope() {
+void TablesStack::closeScope(){
     endScope();
 
     SymbolTable* to_del = this->table_stack.top();
