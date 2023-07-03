@@ -1,0 +1,29 @@
+declare i32 @printf(i8*, ...)
+declare void @exit(i32)
+@.string = constant [4 x i8] c"%s\0A\00"
+@.integer = constant [4 x i8] c"%d\0A\00"
+@.check_division_string = constant [23 x i8] c"Error division by zero\00"
+
+define void @print(i8*) {
+    %str = getelementptr [4 x i8], [4 x i8]* @.string, i32 0, i32 0
+    call i32 @printf(i8* %str, i8* %0)
+    ret void
+}
+
+define void @printi(i32*){
+    %num = getelementptr [4 x i8], [4 x i8]* @.integer, i32 0, i32 0
+    call i32 (i8* %num, i8* %0) @printf(i8* %num, i32 %0)
+    ret void 
+}
+
+define void @check_division(i32) {
+    %zero = icmp ne i32 %0, 0
+    br i1 %zero, label %true_label, label %false_label
+    true_label:
+        ret void
+    false_label:
+        %str = getelementptr [23 x i8], [23 x i8]* @.check_division_string, i32 0, i32 0
+        call void @print(i8* %str)
+        call void @exit(i32 1)
+        ret void
+}

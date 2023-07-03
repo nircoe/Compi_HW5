@@ -17,7 +17,7 @@ string binopToLLVM(const char binop, CodeBuffer* buffer, TypesEnum type, ExpNode
         case '*':
             return "mul";
         case '/':
-            buffer->emit("call void @division_by_zero(i32 " + exp2->var + ")"); // need to add this function to llvm file
+            buffer->emit("call void @division_by_zero(i32 " + exp2->var + ")");
             if(type == TYPE_BYTE) return "udiv";
             else if(type == TYPE_INT) return "sdiv";
     }
@@ -301,6 +301,7 @@ void CodeGenerator::processParentheses(ExpNode *new_exp, ExpNode *exp) {
 
 void CodeGenerator::processBinop(ExpNode *new_exp, ExpNode *exp1, ExpNode *exp2, const char binop) {
     string binop_llvm = binopToLLVM(binop, this->buffer, new_exp->type, exp2);
+    if(binop_llvm.compare("") == 0 ) // error
     new_exp->start_label = exp1->start_label;
     this->buffer->bpatch(exp1->next_list, exp2->start_label);
     this->buffer->bpatch(exp2->next_list, this->buffer->genLabel());
@@ -320,7 +321,7 @@ void CodeGenerator::processBinop(ExpNode *new_exp, ExpNode *exp1, ExpNode *exp2,
 
 void CodeGenerator::processRelop(ExpNode *new_exp, ExpNode *exp1, ExpNode *exp2, const string relop) {
     string relop_op = relopToLLVM(relop);
-
+    if(relop_op.compare("") == 0 ) // error
     if(!(relop.compare("==") == 0 || relop.compare("!=") == 0)) {
         if(exp1->type == TYPE_BYTE && exp2->type == TYPE_BYTE) relop_op = "u" + relop_op;
         else                                                 relop_op = "s" + relop_op;
