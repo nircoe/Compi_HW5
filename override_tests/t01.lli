@@ -1,0 +1,102 @@
+@.var2 = constant [14 x i8] c"im in 1 param\00"
+@.var7 = constant [14 x i8] c"im in 2 param\00"
+declare i32 @printf(i8*, ...)
+declare void @exit(i32)
+@.int_specifier = constant [4 x i8] c"%d\0A\00"
+@.str_specifier = constant [4 x i8] c"%s\0A\00"
+@.check_division_string = constant [23 x i8] c"Error division by zero\00"
+
+define void @printi0(i32) {
+  %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.int_specifier, i32 0, i32 0
+  call i32 (i8*, ...) @printf(i8* %spec_ptr, i32 %0)
+  ret void
+}
+
+define void @print0(i8*) {
+  %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.str_specifier, i32 0, i32 0
+  call i32 (i8*, ...) @printf(i8* %spec_ptr, i8* %0)
+  ret void
+}
+
+define void @check_division(i32) {
+  %zero = icmp ne i32 %0, 0
+  br i1 %zero, label %true_label, label %false_label
+  true_label:
+      ret void
+  false_label:
+      %str = getelementptr [23 x i8], [23 x i8]* @.check_division_string, i32 0, i32 0
+      call void @print0(i8* %str)
+      call void @exit(i32 1)
+      ret void
+}
+
+define i32 @nezo11(i32) {
+%var1 = alloca [50 x i32]
+br label %label_33
+label_33:
+%.var2 = getelementptr [14 x i8], [14 x i8]* @.var2, i32 0, i32 0
+br label %label_36
+label_36:
+br label %label_38
+label_38:
+call void @print0(i8* %.var2)
+br label %label_41
+label_41:
+ret i32 0
+}
+define i32 @nezo12(i32, i32) {
+%var6 = alloca [50 x i32]
+br label %label_47
+label_47:
+%.var7 = getelementptr [14 x i8], [14 x i8]* @.var7, i32 0, i32 0
+br label %label_50
+label_50:
+br label %label_52
+label_52:
+call void @print0(i8* %.var7)
+br label %label_55
+label_55:
+ret i32 0
+}
+define void @main() {
+%var9 = alloca [50 x i32]
+br label %label_61
+label_61:
+%var10 = add i32 0, 0
+br label %label_64
+label_64:
+%var11 = getelementptr [50 x i32], [50 x i32]* %var9, i32 0, i32 0
+store i32 %var10, i32* %var11
+br label %label_68
+label_68:
+%var12 = add i32 0, 0
+br label %label_71
+label_71:
+%var13 = getelementptr [50 x i32], [50 x i32]* %var9, i32 0, i32 1
+store i32 %var12, i32* %var13
+br label %label_75
+label_75:
+%var15 = getelementptr [50 x i32], [50 x i32]* %var9, i32 0, i32 0
+%var14 = load i32, i32* %var15
+br label %label_79
+label_79:
+br label %label_81
+label_81:
+%var16 = call i32 @nezo11(i32 %var14)
+br label %label_84
+label_84:
+%var18 = getelementptr [50 x i32], [50 x i32]* %var9, i32 0, i32 0
+%var17 = load i32, i32* %var18
+br label %label_88
+label_88:
+%var20 = getelementptr [50 x i32], [50 x i32]* %var9, i32 0, i32 1
+%var19 = load i32, i32* %var20
+br label %label_92
+label_92:
+br label %label_94
+label_94:
+%var21 = call i32 @nezo12(i32 %var17, i32 %var19)
+br label %label_97
+label_97:
+ret void
+}

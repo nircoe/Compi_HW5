@@ -26,7 +26,8 @@
 %left OR
 %left AND
 %left RELOP
-%left BINOP
+%left PLUSMINUS
+%left MULTDIV
 %right NOT
 %left LPAREN
 %left RPAREN
@@ -122,7 +123,7 @@ Statement   :   LBRACE OpenScope Statements RBRACE CloseScope {
             |   Type ID SC { 
                     TypeNode* type = (TypeNode*)$1;
                     IdNode* id = (IdNode*)$2;
-                    if (tables_stack->symbDeclared(id->name)) {
+                    if (tables_stack->symbDeclaredForTypeAssign(id->name)) {
                         errorDef(yylineno, id->name);
                         exit(1);
                     }
@@ -134,7 +135,7 @@ Statement   :   LBRACE OpenScope Statements RBRACE CloseScope {
                     TypeNode* type = (TypeNode*)$1;
                     IdNode* id = (IdNode*)$2;
                     ExpNode* exp = (ExpNode*)$4;
-                    if (tables_stack->symbDeclared(id->name)) {
+                    if (tables_stack->symbDeclaredForTypeAssign(id->name)) {
                         errorDef(yylineno, id->name);
                         exit(1);
                     }
@@ -291,9 +292,9 @@ Exp         :   LPAREN Exp RPAREN {
                     $$ = new ExpNode(exp->type); 
                     code_generator->processParentheses((ExpNode*)$$, exp);
                 }
-            |   Exp BINOP Exp {
+            |   Exp PLUSMINUS Exp {
                     ExpNode* first = (ExpNode*)$1;
-                    BinopNode* binop = (BinopNode*)$2;
+                    BinopNode* plusminus = (BinopNode*)$2;
                     ExpNode* second = (ExpNode*)$3;
                     TypesEnum type = SumType(first->type, second->type);
                     if (type == NULL_TYPE) {
@@ -301,8 +302,20 @@ Exp         :   LPAREN Exp RPAREN {
                         exit(1);
                     }
                     $$ = new ExpNode(type, code_generator->freshVar());
-                    code_generator->processBinop((ExpNode*)$$, first, second, binop->binop);
+                    code_generator->processBinop((ExpNode*)$$, first, second, plusminus->binop);
                 }
+            |   Exp MULTDIV Exp {
+                    ExpNode* first = (ExpNode*)$1;
+                    BinopNode* multdiv = (BinopNode*)$2;
+                    ExpNode* second = (ExpNode*)$3;
+                    TypesEnum type = SumType(first->type, second->type);
+                    if (type == NULL_TYPE) {
+                        errorMismatch(yylineno);
+                        exit(1);
+                    }
+                    $$ = new ExpNode(type, code_generator->freshVar());
+                    code_generator->processBinop((ExpNode*)$$, first, second, multdiv->binop);
+            }
             |   ID { 
                     IdNode* id = (IdNode*)$1;
                     if(!tables_stack->symbDeclared(id->name)) {

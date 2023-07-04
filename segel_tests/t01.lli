@@ -1,0 +1,121 @@
+@.var3 = constant [12 x i8] c"val is true\00"
+@.var5 = constant [13 x i8] c"val is false\00"
+@.var19 = constant [5 x i8] c"true\00"
+@.var24 = constant [5 x i8] c"true\00"
+declare i32 @printf(i8*, ...)
+declare void @exit(i32)
+@.int_specifier = constant [4 x i8] c"%d\0A\00"
+@.str_specifier = constant [4 x i8] c"%s\0A\00"
+@.check_division_string = constant [23 x i8] c"Error division by zero\00"
+
+define void @printi0(i32) {
+  %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.int_specifier, i32 0, i32 0
+  call i32 (i8*, ...) @printf(i8* %spec_ptr, i32 %0)
+  ret void
+}
+
+define void @print0(i8*) {
+  %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.str_specifier, i32 0, i32 0
+  call i32 (i8*, ...) @printf(i8* %spec_ptr, i8* %0)
+  ret void
+}
+
+define void @check_division(i32) {
+  %zero = icmp ne i32 %0, 0
+  br i1 %zero, label %true_label, label %false_label
+  true_label:
+      ret void
+  false_label:
+      %str = getelementptr [23 x i8], [23 x i8]* @.check_division_string, i32 0, i32 0
+      call void @print0(i8* %str)
+      call void @exit(i32 1)
+      ret void
+}
+
+define void @printByValue1(i32) {
+%var1 = alloca [50 x i32]
+br label %label_33
+label_33:
+%var2 = icmp ne i32 %1, 0
+br i1 %var2, label %label_36, label %label_44
+label_36:
+%.var3 = getelementptr [12 x i8], [12 x i8]* @.var3, i32 0, i32 0
+br label %label_39
+label_39:
+br label %label_41
+label_41:
+call void @print0(i8* %.var3)
+br label %label_52
+label_44:
+%.var5 = getelementptr [13 x i8], [13 x i8]* @.var5, i32 0, i32 0
+br label %label_47
+label_47:
+br label %label_49
+label_49:
+call void @print0(i8* %.var5)
+br label %label_52
+label_52:
+ret void
+}
+define void @main() {
+%var7 = alloca [50 x i32]
+br label %label_58
+label_58:
+br label %label_62
+label_60:
+br label %label_71
+label_62:
+%var10 = zext i1 true to i32
+br label %label_68
+label_65:
+%var11 = zext i1 false to i32
+br label %label_68
+label_68:
+%var12 = phi i32 [1, %label_62], [0, %label_65]
+br label %label_60
+label_71:
+call void @printByValue1(i32 %var12)
+br label %label_74
+label_74:
+br label %label_81
+label_76:
+br label %label_87
+label_78:
+%var15 = zext i1 true to i32
+br label %label_84
+label_81:
+%var16 = zext i1 false to i32
+br label %label_84
+label_84:
+%var17 = phi i32 [1, %label_78], [0, %label_81]
+br label %label_76
+label_87:
+call void @printByValue1(i32 %var17)
+br label %label_90
+label_90:
+br label %label_92
+label_92:
+%.var19 = getelementptr [5 x i8], [5 x i8]* @.var19, i32 0, i32 0
+br label %label_95
+label_95:
+br label %label_97
+label_97:
+call void @print0(i8* %.var19)
+br label %label_100
+label_100:
+br label %label_102
+label_102:
+br label %label_114
+label_104:
+br label %label_106
+label_106:
+%.var24 = getelementptr [5 x i8], [5 x i8]* @.var24, i32 0, i32 0
+br label %label_109
+label_109:
+br label %label_111
+label_111:
+call void @print0(i8* %.var24)
+br label %label_114
+label_114:
+ret void
+}

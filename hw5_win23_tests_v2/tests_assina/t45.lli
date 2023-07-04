@@ -1,0 +1,125 @@
+@.var9 = constant [13 x i8] c"Expecting 45\00"
+@.var19 = constant [5 x i8] c"done\00"
+@.var21 = constant [7 x i8] c"FAILED\00"
+declare i32 %label_75printf(i8*, ...)
+declare void @exit(i32)
+@.int_specifier = constant [4 x i8] c"%d\0A\00"
+@.str_specifier = constant [4 x i8] c"%s\0A\00"
+@.check_division_string = constant [23 x i8] c"Error division by zero\00"
+
+define void @printi0(i32) {
+  %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.int_specifier, i32 0, i32 0
+  call i32 (i8*, ...) @printf(i8* %spec_ptr, i32 %0)
+  ret void
+}
+
+define void @print0(i8*) {
+  %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.str_specifier, i32 0, i32 0
+  call i32 (i8*, ...) @printf(i8* %spec_ptr, i8* %0)
+  ret void
+}
+
+define void @check_division(i32) {
+  %zero = icmp ne i32 %0, 0
+  br i1 %zero, label %true_label, label %false_label
+  true_label:
+      ret void
+  false_label:
+      %str = getelementptr [23 x i8], [23 x i8]* @.check_division_string, i32 0, i32 0
+      call void @print0(i8* %str)
+      call void @exit(i32 1)
+      ret void
+}
+
+define i32 @advancedFunc1(i32) {
+%var1 = alloca [50 x i32]
+br label %label_33
+label_33:
+br label %label_35
+label_35:
+%var2 = and i32 %0, 255
+br label %label_38
+label_38:
+ret i32 %var2
+br label %label_41
+label_41:
+ret i32 0
+}
+define i32 @getTrue1() {
+%var3 = alloca [50 x i32]
+br label %label_47
+label_47:
+br label %label_49
+label_49:
+%var5 = zext i1 true to i32
+br label %label_55
+label_52:
+%var6 = zext i1 false to i32
+br label %label_55
+label_55:
+%var7 = phi i32 [1, %label_49], [0, %label_52]
+br label %label_58
+label_58:
+ret i32 %var7
+br label %label_61
+label_61:
+ret i32 0
+}
+define void @main() {
+%var8 = alloca [50 x i32]
+br label %label_67
+label_67:
+%.var9 = getelementptr [13 x i8], [13 x i8]* @.var9, i32 0, i32 0
+br label %label_70
+label_70:
+br label %label_72
+label_72:
+call void @print0(i8* %.var9)
+br label %label_75
+label_75:
+%var11 = call i32 @getTrue1()
+%var12 = icmp ne i32 0, %var11
+br i1 %var12, label %label_79, label %label_111
+label_79:
+%var13 = add i32 45, 0
+br label %label_82
+label_82:
+br label %label_84
+label_84:
+%var14 = call i32 @advancedFunc1(i32 %var13)
+br label %label_87
+label_87:
+%var15 = getelementptr [50 x i32], [50 x i32]* %var8, i32 0, i32 0
+store i32 %var14, i32* %var15
+br label %label_91
+label_91:
+%var17 = getelementptr [50 x i32], [50 x i32]* %var8, i32 0, i32 0
+%var16 = load i32, i32* %var17
+br label %label_95
+label_95:
+br label %label_97
+label_97:
+call void @printi0(i32 %var16)
+br label %label_100
+label_100:
+%.var19 = getelementptr [5 x i8], [5 x i8]* @.var19, i32 0, i32 0
+br label %label_103
+label_103:
+br label %label_105
+label_105:
+call void @print0(i8* %.var19)
+br label %label_108
+label_108:
+ret void
+br label %label_111
+label_111:
+%.var21 = getelementptr [7 x i8], [7 x i8]* @.var21, i32 0, i32 0
+br label %label_114
+label_114:
+br label %label_116
+label_116:
+call void @print0(i8* %.var21)
+br label %label_119
+label_119:
+ret void
+}

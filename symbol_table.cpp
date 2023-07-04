@@ -32,13 +32,25 @@ bool TablesStack::symbDeclared(const string& name, bool is_func) {
     bool check_func = false;
     while (table_iter != nullptr) {
         if (table_iter->exists(name, &check_func)) {
-            return (is_func) ? check_func : true;
+            if(!is_func && check_func) return false;
+            else if(!is_func && !check_func) return true;
+            return check_func;
         }
         table_iter = table_iter->parent;
     }
     return false;
 }
 
+bool TablesStack::symbDeclaredForTypeAssign(const string & name, bool is_func) {
+    SymbolTable* table_iter = this->table_stack.top();
+    while (table_iter != nullptr) {
+        if (table_iter->exists(name)) {
+            return true;
+        }
+        table_iter = table_iter->parent;
+    }
+    return false;
+}
 
 void TablesStack::declVar(const string& var_name, TypesEnum var_type, string var) {
     Symbol* new_symbol = new Symbol(var_name, this->offset_stack.top(), var_type, var);
@@ -78,7 +90,10 @@ int TablesStack::declFunc(const string& name, TypesEnum type, FormalsNode* forma
                     return -1;
                 }
                 else {
-                    if(table_iter->symbols[i]->args.size() != formals->declarations.size()) continue;
+                    if(table_iter->symbols[i]->args.size() != formals->declarations.size()) {
+                        *counter = std::max(*counter, table_iter->symbols[i]->counter);
+                        continue;
+                    }
                     int diff = 0;
                     for(int j = 0; j < formals->declarations.size(); j++) {
                         if(StringToType(table_iter->symbols[i]->args[j]) != formals->declarations[j]->type) {

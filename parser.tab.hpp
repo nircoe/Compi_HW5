@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.7.6.  */
+/* A Bison parser, made by GNU Bison 3.8.2.  */
 
 /* Bison interface for Yacc-like parsers in C
 
@@ -77,12 +77,13 @@ extern int yydebug;
     OR = 278,                      /* OR  */
     AND = 279,                     /* AND  */
     RELOP = 280,                   /* RELOP  */
-    BINOP = 281,                   /* BINOP  */
-    NOT = 282,                     /* NOT  */
-    LPAREN = 283,                  /* LPAREN  */
-    RPAREN = 284,                  /* RPAREN  */
-    SC = 285,                      /* SC  */
-    ELSE = 286                     /* ELSE  */
+    PLUSMINUS = 281,               /* PLUSMINUS  */
+    MULTDIV = 282,                 /* MULTDIV  */
+    NOT = 283,                     /* NOT  */
+    LPAREN = 284,                  /* LPAREN  */
+    RPAREN = 285,                  /* RPAREN  */
+    SC = 286,                      /* SC  */
+    ELSE = 287                     /* ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -97,6 +98,8 @@ typedef int YYSTYPE;
 
 extern YYSTYPE yylval;
 
+
 int yyparse (void);
+
 
 #endif /* !YY_YY_PARSER_TAB_HPP_INCLUDED  */

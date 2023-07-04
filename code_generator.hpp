@@ -16,8 +16,8 @@ using std::queue;
 class CodeGenerator {
     CodeBuffer* buffer;
     int current_reg;
-    int current_label;
     string func_vars_arr;
+    int func_vars_count;
 
     public:
 
@@ -26,8 +26,6 @@ class CodeGenerator {
         CodeBuffer* getCodeBuffer() { return buffer; }
         int getCurrentReg(bool increase = false) { return (increase) ? current_reg++ : current_reg; }
         void increaseCurrentReg() { current_reg++; }
-        int getCurrentLabel(bool increase = false) { return (increase) ? current_label++ : current_label; }
-        void increaseCurrentLabel() { current_label++; }
 
         void emitPrint();
         string freshVar();

@@ -1,0 +1,219 @@
+declare i32 @printf(i8*, ...)
+declare void @exit(i32)
+@.int_specifier = constant [4 x i8] c"%d\0A\00"
+@.str_specifier = constant [4 x i8] c"%s\0A\00"
+@.check_division_string = constant [23 x i8] c"Error division by zero\00"
+
+define void @printi0(i32) {
+  %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.int_specifier, i32 0, i32 0
+  call i32 (i8*, ...) @printf(i8* %spec_ptr, i32 %0)
+  ret void
+}
+
+define void @print0(i8*) {
+  %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.str_specifier, i32 0, i32 0
+  call i32 (i8*, ...) @printf(i8* %spec_ptr, i8* %0)
+  ret void
+}
+
+define void @check_division(i32) {
+  %zero = icmp ne i32 %0, 0
+  br i1 %zero, label %true_label, label %false_label
+  true_label:
+      ret void
+  false_label:
+      %str = getelementptr [23 x i8], [23 x i8]* @.check_division_string, i32 0, i32 0
+      call void @print0(i8* %str)
+      call void @exit(i32 1)
+      ret void
+}
+
+define i32 @f11() {
+%var0 = alloca [50 x i32]
+br label %label_33
+label_33:
+%var1 = add i32 0, 0
+%var2 = getelementptr [50 x i32], [50 x i32]* %var0, i32 0, i32 0
+store i32 %var1, i32* %var2
+br label %label_38
+label_38:
+%var4 = getelementptr [50 x i32], [50 x i32]* %var0, i32 0, i32 0
+%var3 = load i32, i32* %var4
+br label %label_42
+label_42:
+ret i32 %var3
+br label %label_45
+label_45:
+ret i32 0
+}
+define i32 @f21() {
+%var5 = alloca [50 x i32]
+br label %label_51
+label_51:
+br label %label_53
+label_53:
+%var7 = zext i1 true to i32
+br label %label_59
+label_56:
+%var8 = zext i1 false to i32
+br label %label_59
+label_59:
+%var9 = phi i32 [1, %label_53], [0, %label_56]
+br label %label_62
+label_62:
+ret i32 %var9
+br label %label_65
+label_65:
+ret i32 0
+}
+define i32 @f31() {
+%var10 = alloca [50 x i32]
+br label %label_71
+label_71:
+%var11 = add i32 123, 0
+br label %label_74
+label_74:
+ret i32 %var11
+br label %label_77
+label_77:
+ret i32 0
+}
+define void @main() {
+%var12 = alloca [50 x i32]
+br label %label_83
+label_83:
+%var13 = add i32 1, 0
+br label %label_86
+label_86:
+%var14 = getelementptr [50 x i32], [50 x i32]* %var12, i32 0, i32 0
+store i32 %var13, i32* %var14
+br label %label_90
+label_90:
+%var15 = add i32 2, 0
+br label %label_93
+label_93:
+%var16 = getelementptr [50 x i32], [50 x i32]* %var12, i32 0, i32 1
+store i32 %var15, i32* %var16
+br label %label_97
+label_97:
+%var17 = add i32 2, 0
+br label %label_100
+label_100:
+%var19 = getelementptr [50 x i32], [50 x i32]* %var12, i32 0, i32 0
+%var18 = load i32, i32* %var19
+br label %label_104
+label_104:
+call void @check_division(i32 %var18)
+%var20 = sdiv i32 %var17, %var18
+br label %label_108
+label_108:
+%var21 = getelementptr [50 x i32], [50 x i32]* %var12, i32 0, i32 2
+store i32 %var20, i32* %var21
+br label %label_112
+label_112:
+%var23 = getelementptr [50 x i32], [50 x i32]* %var12, i32 0, i32 0
+%var22 = load i32, i32* %var23
+br label %label_116
+label_116:
+%var25 = getelementptr [50 x i32], [50 x i32]* %var12, i32 0, i32 1
+%var24 = load i32, i32* %var25
+br label %label_120
+label_120:
+%var26 = icmp ne i32 %var22, %var24
+br i1 %var26, label %label_123, label %label_126
+label_123:
+%var27 = zext i1 true to i32
+br label %label_129
+label_126:
+%var28 = zext i1 false to i32
+br label %label_129
+label_129:
+%var29 = phi i32 [1, %label_123], [0, %label_126]
+br label %label_132
+label_132:
+%var30 = getelementptr [50 x i32], [50 x i32]* %var12, i32 0, i32 3
+store i32 %var29, i32* %var30
+br label %label_136
+label_136:
+%var31 = add i32 1, 0
+br label %label_139
+label_139:
+%var32 = add i32 1, 0
+br label %label_142
+label_142:
+%var33 = icmp eq i32 %var31, %var32
+br i1 %var33, label %label_145, label %label_148
+label_145:
+%var34 = zext i1 true to i32
+br label %label_151
+label_148:
+%var35 = zext i1 false to i32
+br label %label_151
+label_151:
+%var36 = phi i32 [1, %label_145], [0, %label_148]
+br label %label_154
+label_154:
+%var37 = getelementptr [50 x i32], [50 x i32]* %var12, i32 0, i32 4
+store i32 %var36, i32* %var37
+br label %label_158
+label_158:
+%var38 = call i32 @f11()
+br label %label_161
+label_161:
+%var40 = getelementptr [50 x i32], [50 x i32]* %var12, i32 0, i32 2
+%var39 = load i32, i32* %var40
+br label %label_165
+label_165:
+%var41 = icmp sge i32 %var38, %var39
+br i1 %var41, label %label_168, label %label_171
+label_168:
+%var42 = zext i1 true to i32
+br label %label_174
+label_171:
+%var43 = zext i1 false to i32
+br label %label_174
+label_174:
+%var44 = phi i32 [1, %label_168], [0, %label_171]
+br label %label_177
+label_177:
+%var45 = getelementptr [50 x i32], [50 x i32]* %var12, i32 0, i32 5
+store i32 %var44, i32* %var45
+br label %label_181
+label_181:
+%var47 = getelementptr [50 x i32], [50 x i32]* %var12, i32 0, i32 0
+%var46 = load i32, i32* %var47
+br label %label_185
+label_185:
+%var49 = getelementptr [50 x i32], [50 x i32]* %var12, i32 0, i32 1
+%var48 = load i32, i32* %var49
+br label %label_189
+label_189:
+%var50 = icmp sgt i32 %var46, %var48
+br i1 %var50, label %label_192, label %label_206
+label_192:
+%var52 = getelementptr [50 x i32], [50 x i32]* %var12, i32 0, i32 2
+%var51 = load i32, i32* %var52
+br label %label_196
+label_196:
+%var54 = getelementptr [50 x i32], [50 x i32]* %var12, i32 0, i32 0
+%var53 = load i32, i32* %var54
+br label %label_200
+label_200:
+%var55 = icmp sle i32 %var51, %var53
+br i1 %var55, label %label_203, label %label_206
+label_203:
+%var56 = zext i1 true to i32
+br label %label_209
+label_206:
+%var57 = zext i1 false to i32
+br label %label_209
+label_209:
+%var58 = phi i32 [1, %label_203], [0, %label_206]
+br label %label_212
+label_212:
+%var59 = getelementptr [50 x i32], [50 x i32]* %var12, i32 0, i32 3
+store i32 %var58, i32* %var59
+br label %label_216
+label_216:
+ret void
+}

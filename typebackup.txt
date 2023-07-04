@@ -1,0 +1,54 @@
+|   LPAREN Type RPAREN ID {
+                TypeNode* type = (TypeNode*)$2;
+                IdNode* id = (IdNode*)$4;
+                ExpNode* exp = new ExpNode(tables_stack->getIdType(id->name));
+                if(!ConversionLegality(exp->type, type->type)) {
+                    errorMismatch(yylineno);
+                    exit(1);
+                }
+                int offset = tables_stack->getIdOffset(id->name);
+                code_generator->loadVar(exp, offset);
+                $$ = new ExpNode(type->type, code_generator->freshVar());
+                code_generator->processConvertion((ExpNode*)$$, exp);
+            }
+            |   LPAREN Type RPAREN NUM {
+                TypeNode* type = (TypeNode*)$2;
+                NumNode* num = (NumNode*)$4;
+                ExpNode* exp = new ExpNode(TYPE_INT, code_generator->freshVar());
+                if(!ConversionLegality(exp->type, type->type)) {
+                    errorMismatch(yylineno);
+                    exit(1);
+                }
+                code_generator->processExpNum(exp, num);
+                $$ = new ExpNode(type->type, code_generator->freshVar());
+                code_generator->processConvertion((ExpNode*)$$, exp);
+            }
+            |   LPAREN Type RPAREN NUM B {
+                TypeNode* type = (TypeNode*)$2;
+                NumNode* num = (NumNode*)$4;
+                if(std::stoi(num->num_val) > 255) {
+                    errorByteTooLarge(yylineno, num->num_val);
+                    exit(1);
+                }
+                ExpNode* exp = new ExpNode(TYPE_BYTE, code_generator->freshVar());
+                if(!ConversionLegality(exp->type, type->type)) {
+                    errorMismatch(yylineno);
+                    exit(1);
+                }
+                code_generator->processExpNum(exp, num);
+                $$ = new ExpNode(type->type, code_generator->freshVar());
+                code_generator->processConvertion((ExpNode*)$$, exp);
+            }
+            |   LPAREN Type RPAREN LPAREN Exp RPAREN {
+                    TypeNode* type = (TypeNode*)$2;
+                    ExpNode* exp = (ExpNode*)$5; 
+                    if(!ConversionLegality(exp->type, type->type)) {
+                        errorMismatch(yylineno);
+                        exit(1);
+                    }
+                    ExpNode* new_exp = new ExpNode(exp->type);
+                    code_generator->processParentheses(new_exp, exp);
+                    $$ = new ExpNode(type->type, code_generator->freshVar());
+                    code_generator->processConvertion((ExpNode*)$$, new_exp);
+                }
+            ;

@@ -62,6 +62,7 @@ public:
     void Init(); 
     // checks if symbol was declared
     bool symbDeclared(const string& name, bool is_func = false);
+    bool symbDeclaredForTypeAssign(const string& name, bool is_func = false);
     // declares new variable
     void declVar(const string& name, TypesEnum type, string var);
     // declares new function
